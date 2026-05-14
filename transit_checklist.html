@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Transit Checklist - LogisticsPro</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/transit_checklist_style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="checklist-page">
+
+<!-- Layout injects header + sidebar + bottom nav -->
+<script src="assets/js/layout.js"></script>
+
+<!-- Push content below header -->
+<div style="height:60px"></div>
+
+<div class="cl-wrapper" style="padding-bottom: 80px">
+
+    <!-- Page Header -->
+    <div class="cl-header">
+        <h1>🏗️ JANAI ENTERPRISES</h1>
+        <h2>DAILY CHECKLIST FOR TRANSIT MIXERS</h2>
+    </div>
+
+    <!-- Vehicle Info -->
+    <div class="cl-card">
+        <div class="cl-card-title">वाहन माहिती</div>
+        <div class="cl-form-grid cols-3">
+            <div class="cl-form-group">
+                <label class="cl-label">गाडी नंबर</label>
+                <input class="cl-input" type="text" id="vehicleNum" placeholder="MH-XX-XXXX">
+            </div>
+            <div class="cl-form-group">
+                <label class="cl-label">शाखा</label>
+                <input class="cl-input" type="text" id="branchName" placeholder="शाखा">
+            </div>
+            <div class="cl-form-group">
+                <label class="cl-label">दिनांक</label>
+                <input class="cl-input" type="date" id="entryDate">
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── MOBILE: Card-based trips ─── -->
+    <div class="mobile-trips">
+        <div class="cl-card-title" style="padding:0 0 8px;margin-bottom:10px;font-size:13px;font-weight:700;color:var(--tc-primary);border-bottom:2px solid var(--tc-primary-light)">
+            चलान नोंदी
+        </div>
+        <div id="trips-container"></div>
+        <button class="cl-btn-add" id="add-row-mobile">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+            </svg>
+            नवीन चलान जोडा
+        </button>
+    </div>
+
+    <!-- ─── DESKTOP: Full table ─── -->
+    <div class="desktop-table-wrapper cl-card">
+        <div class="cl-card-title">चलान नोंदी</div>
+        <div style="overflow-x:auto">
+            <table class="cl-dt">
+                <thead>
+                    <tr>
+                        <th rowspan="2">चालन क्र.</th>
+                        <th rowspan="2">पार्टीचे नाव</th>
+                        <th colspan="4">वेळ</th>
+                        <th rowspan="2">एकूण वेळ</th>
+                        <th colspan="3">किलोमीटर</th>
+                        <th colspan="2">डिझेल</th>
+                        <th rowspan="2">एकूण रनिंग</th>
+                        <th rowspan="2">नग</th>
+                    </tr>
+                    <tr>
+                        <th>प्लांट निघणे</th>
+                        <th>साईट पोहोच</th>
+                        <th>साईट निघणे</th>
+                        <th>प्लांट पोहोच</th>
+                        <th>सुरुवात</th>
+                        <th>शेवट</th>
+                        <th>एकूण</th>
+                        <th>सुरुवात</th>
+                        <th>शेवट</th>
+                    </tr>
+                </thead>
+                <tbody id="desktop-tbody"></tbody>
+            </table>
+        </div>
+        <button class="cl-btn-add" id="add-row-desktop" style="margin-top:12px">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+            </svg>
+            नवीन ओळ जोडा
+        </button>
+    </div>
+
+    <!-- Diesel & Lubricant -->
+    <div class="cl-card">
+        <div class="cl-card-title">दिलेला माल</div>
+
+        <div class="cl-section-label">डिझेल</div>
+        <div id="diesel-entries">
+            <div class="cl-form-grid" style="margin-bottom:8px">
+                <div class="cl-form-group"><label class="cl-label">कि.मी. रिडिंग</label><input class="cl-input" type="number" placeholder="0"></div>
+                <div class="cl-form-group"><label class="cl-label">नग (Qty)</label><input class="cl-input" type="number" placeholder="0"></div>
+            </div>
+            <div class="cl-form-grid" style="margin-bottom:8px">
+                <div class="cl-form-group"><label class="cl-label">कि.मी. रिडिंग</label><input class="cl-input" type="number" placeholder="0"></div>
+                <div class="cl-form-group"><label class="cl-label">नग (Qty)</label><input class="cl-input" type="number" placeholder="0"></div>
+            </div>
+            <div class="cl-form-grid" style="margin-bottom:8px">
+                <div class="cl-form-group"><label class="cl-label">कि.मी. रिडिंग</label><input class="cl-input" type="number" placeholder="0"></div>
+                <div class="cl-form-group"><label class="cl-label">नग (Qty)</label><input class="cl-input" type="number" placeholder="0"></div>
+            </div>
+        </div>
+
+        <div class="cl-section-label" style="margin-top:14px">लुब्रिकंट</div>
+        <div class="lube-grid">
+            <span class="lube-label">इंजिन ऑईल</span><input class="cl-input" type="text" placeholder="नग">
+            <span class="lube-label">एच वा डी ऑईल</span><input class="cl-input" type="text" placeholder="नग">
+            <span class="lube-label">गियर ऑईल</span><input class="cl-input" type="text" placeholder="नग">
+        </div>
+
+        <div class="cl-form-grid" style="margin-top:14px">
+            <div class="cl-form-group cl-full"><label class="cl-label">साईट इन्चार्ज</label><input class="cl-input" type="text" placeholder="नाव"></div>
+            <div class="cl-form-group cl-full"><label class="cl-label">मटेरियल आय.सी.</label><input class="cl-input" type="text" placeholder="नाव"></div>
+        </div>
+    </div>
+
+    <!-- Checklist -->
+    <div class="cl-card">
+        <div class="cl-card-title">चेकलिस्ट</div>
+        <div class="cl-checklist" id="checklist"></div>
+    </div>
+
+    <!-- Signature -->
+    <div class="cl-card">
+        <div class="cl-card-title">सिग्नेचर</div>
+        <div class="signature-box">✍️ येथे स्वाक्षरी करा</div>
+    </div>
+
+    <!-- Print button -->
+    <button class="cl-btn-print" onclick="preparePrint()">🖨️ Print / PDF</button>
+
+    <!-- Print layout (hidden) -->
+    <div id="print-layout" style="display:none">
+        <div class="print-page">
+            <h2 style="text-align:center">JANAI ENTERPRISES</h2>
+            <h4 style="text-align:center">DAILY CHECKLIST FOR TRANSIT MIXERS</h4>
+            <div class="print-info">
+                <span>गाडी नंबर: <b id="p-vehicle"></b></span>
+                <span>शाखा: <b id="p-branch"></b></span>
+                <span>दिनांक: <b id="p-date"></b></span>
+            </div>
+            <table class="print-table">
+                <thead>
+                    <tr>
+                        <th>चालन</th><th>पार्टी</th><th>प्लांट</th>
+                        <th>साईट</th><th>साईट</th><th>प्लांट</th>
+                        <th>KM सुरुवात</th><th>KM शेवट</th><th>एकूण</th>
+                    </tr>
+                </thead>
+                <tbody id="print-body"></tbody>
+            </table>
+            <div class="print-bottom">
+                <div class="print-box"><h4>डिझेल</h4><div id="p-diesel"></div></div>
+                <div class="print-box"><h4>चेकलिस्ट</h4><div id="p-checklist"></div></div>
+                <div class="print-box"><h4>सिग्नेचर</h4><div class="sign-box"></div></div>
+            </div>
+        </div>
+    </div>
+</div><!-- /cl-wrapper -->
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/transit_checklist.js"></script>
+</body>
+</html>

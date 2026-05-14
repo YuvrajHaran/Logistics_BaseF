@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Expenses - LogisticsPro</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .crm-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;align-items:center;justify-content:center;padding:1rem;}
+        .crm-modal-overlay.open{display:flex;}
+        @media(max-width:600px){.crm-modal-overlay{align-items:flex-end;padding:0;}.crm-modal{border-radius:1rem 1rem 0 0;max-height:92vh;}}
+    </style>
+</head>
+<body>
+<script src="assets/js/layout.js"></script>
+
+<main class="main-content">
+    <div class="page-header">
+        <h1>💰 Expenses</h1>
+        <button class="btn btn-primary" id="addExpenseBtn">+ Add Expense</button>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+        <div class="filter-group">
+            <select class="filter-select" id="filterMonth">
+                <option value="current">This Month</option>
+                <option value="last">Last Month</option>
+                <option value="3months">Last 3 Months</option>
+                <option value="year">This Year</option>
+            </select>
+            <select class="filter-select" id="filterVehicle">
+                <option value="">All Vehicles</option>
+                <option value="1">MH04 AB1234</option>
+                <option value="2">GJ05 CD5678</option>
+                <option value="3">RJ06 EF9012</option>
+            </select>
+            <select class="filter-select" id="filterCategory">
+                <option value="">All Categories</option>
+                <option value="fuel">Fuel</option>
+                <option value="emi">EMI</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="tyres">Tyres</option>
+                <option value="salaries">Salaries</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <button class="btn btn-outline" onclick="showNotification('Excel export coming soon!','info')">📥 Excel</button>
+            <button class="btn btn-outline" onclick="showNotification('PDF export coming soon!','info')">📄 PDF</button>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="card">
+        <div class="card-header"><h2>Expense Summary — January 2024</h2></div>
+        <div class="card-body">
+            <div class="expense-summary-box">
+                <div class="summary-total">
+                    <span style="font-weight:600;color:var(--gray-700)">Total Expenses</span>
+                    <span class="amount">₹12,50,000</span>
+                </div>
+                <div class="expense-breakdown-chart">
+                    <div class="breakdown-item"><div class="breakdown-bar"><div class="bar-fill" style="width:36%;background:#3b82f6"></div></div><span>⛽ Fuel ₹4,50,000 (36%)</span></div>
+                    <div class="breakdown-item"><div class="breakdown-bar"><div class="bar-fill" style="width:32%;background:#ef4444"></div></div><span>💰 EMI ₹4,00,000 (32%)</span></div>
+                    <div class="breakdown-item"><div class="breakdown-bar"><div class="bar-fill" style="width:16%;background:#10b981"></div></div><span>⚙️ Maintenance ₹2,00,000 (16%)</span></div>
+                    <div class="breakdown-item"><div class="breakdown-bar"><div class="bar-fill" style="width:8%;background:#f59e0b"></div></div><span>🛞 Tyres ₹1,00,000 (8%)</span></div>
+                    <div class="breakdown-item"><div class="breakdown-bar"><div class="bar-fill" style="width:6%;background:#8b5cf6"></div></div><span>👥 Salaries ₹75,000 (6%)</span></div>
+                    <div class="breakdown-item"><div class="breakdown-bar"><div class="bar-fill" style="width:2%;background:#6b7280"></div></div><span>📋 Others ₹25,000 (2%)</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+        <div class="card-header">
+            <h2>All Expenses</h2>
+            <span style="font-size:.875rem;color:var(--gray-500)" id="expenseCount">Showing 10 records</span>
+        </div>
+        <div class="card-body" style="padding:0">
+            <div class="table-responsive">
+                <table class="data-table" id="expensesTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Vehicle</th>
+                            <th>Category</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>20-Jan-2024</td><td>MH04 AB1234</td><td>💰 Finance</td><td>EMI</td><td><strong>₹45,000</strong></td><td>HDFC Bank</td>
+                            <td><button class="btn btn-sm btn-outline" onclick="viewExpense(this)">View</button></td>
+                        </tr>
+                        <tr>
+                            <td>20-Jan-2024</td><td>GJ05 CD5678</td><td>💰 Finance</td><td>EMI</td><td><strong>₹42,000</strong></td><td>ICICI Bank</td>
+                            <td><button class="btn btn-sm btn-outline" onclick="viewExpense(this)">View</button></td>
+                        </tr>
+                        <tr>
+                            <td>19-Jan-2024</td><td>All Vehicles</td><td>👥 Staff</td><td>Salary</td><td><strong>₹75,000</strong></td><td>Driver salaries</td>
+                            <td><button class="btn btn-sm btn-outline" onclick="viewExpense(this)">View</button></td>
+                        </tr>
+                        <tr>
+                            <td>18-Jan-2024</td><td>RJ06 EF9012</td><td>⛽ Fuel</td><td>Diesel</td><td><strong>₹15,000</strong></td><td>250L, Shell</td>
+                            <td><button class="btn btn-sm btn-outline" onclick="viewExpense(this)">View</button></td>
+                        </tr>
+                        <tr>
+                            <td>18-Jan-2024</td><td>MH04 AB1234</td><td>⛽ Fuel</td><td>Diesel</td><td><strong>₹12,000</strong></td><td>200L, HP</td>
+                            <td><button class="btn btn-sm btn-outline" onclick="viewExpense(this)">View</button></td>
+                        </tr>
+                        <tr>
+                            <td>15-Jan-2024</td><td>UP07 GH3456</td><td>🔧 Repair</td><td>Engine</td><td><strong>₹18,000</strong></td><td>Engine overhaul</td>
+                            <td><button class="btn btn-sm btn-outline" onclick="viewExpense(this)">View</button></td>
+                        </tr>
+                        <tr>
+                            <td>15-Jan-2024</td><td>MH04 AB1234</td><td>🔧 Repair</td><td>Brake</td><td><strong>₹5,000</strong></td><td>Brake system</td>
+                            <td><button class="btn btn-sm btn-outline" onclick="viewExpense(this)">View</button></td>
+                        </tr>
+                        <tr>
+                            <td>12-Jan-2024</td><td>GJ05 CD5678</td><td>⛽ Fuel</td><td>Diesel</td><td><strong>₹13,000</strong></td><td>220L, IOCL</td>
+                            <td><button class="btn btn-sm btn-outline" onclick="viewExpense(this)">View</button></td>
+                        </tr>
+                        <tr>
+                            <td>10-Jan-2024</td><td>MH04 AB1234</td><td>⛽ Fuel</td><td>Diesel</td><td><strong>₹12,000</strong></td><td>200L, BP</td>
+                            <td><button class="btn btn-sm btn-outline" onclick="viewExpense(this)">View</button></td>
+                        </tr>
+                        <tr>
+                            <td>05-Jan-2024</td><td>RJ06 EF9012</td><td>⚙️ Service</td><td>Full Service</td><td><strong>₹9,000</strong></td><td>Regular servicing</td>
+                            <td><button class="btn btn-sm btn-outline" onclick="viewExpense(this)">View</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" style="padding:1rem 1.25rem">
+                <p>Showing 1–10 of 156 expenses</p>
+                <div class="pagination-buttons">
+                    <button class="btn btn-sm" disabled>← Prev</button>
+                    <button class="btn btn-sm btn-primary">1</button>
+                    <button class="btn btn-sm">2</button>
+                    <button class="btn btn-sm">3</button>
+                    <button class="btn btn-sm">Next →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Add Expense Modal -->
+<div class="crm-modal-overlay" id="addExpenseOverlay">
+    <div class="crm-modal">
+        <div class="crm-modal-header">
+            <h3>💰 Add Expense</h3>
+            <button class="crm-modal-close" id="closeExpenseModal">✕</button>
+        </div>
+        <div class="crm-modal-body">
+            <div class="form-grid">
+                <div class="fgrp">
+                    <label>Category *</label>
+                    <select id="expCategory">
+                        <option value="">Select category</option>
+                        <option>Fuel</option><option>EMI</option><option>Maintenance</option>
+                        <option>Tyres</option><option>Salary</option><option>Others</option>
+                    </select>
+                </div>
+                <div class="fgrp">
+                    <label>Amount (₹) *</label>
+                    <input type="number" id="expAmount" placeholder="e.g. 5000">
+                </div>
+                <div class="fgrp">
+                    <label>Date *</label>
+                    <input type="date" id="expDate">
+                </div>
+                <div class="fgrp">
+                    <label>Vehicle</label>
+                    <select id="expVehicle">
+                        <option value="">Select vehicle</option>
+                        <option>MH04 AB1234</option><option>GJ05 CD5678</option>
+                        <option>RJ06 EF9012</option><option>UP07 GH3456</option>
+                        <option>All Vehicles</option>
+                    </select>
+                </div>
+                <div class="fgrp">
+                    <label>Type / Sub-category</label>
+                    <input type="text" id="expType" placeholder="e.g. Diesel, Brake repair">
+                </div>
+                <div class="fgrp">
+                    <label>Vendor / Bank</label>
+                    <input type="text" id="expVendor" placeholder="e.g. HDFC Bank, HP Pump">
+                </div>
+                <div class="fgrp full-width">
+                    <label>Notes</label>
+                    <textarea id="expNotes" rows="2" placeholder="Any additional notes…"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="crm-modal-footer">
+            <button class="btn btn-outline" id="cancelExpenseModal">Cancel</button>
+            <button class="btn btn-primary" id="saveExpenseBtn">💾 Save Expense</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+function openModal(id){ $('#'+id).addClass('open'); $('body').css('overflow','hidden'); }
+function closeModal(id){ $('#'+id).removeClass('open'); $('body').css('overflow',''); }
+
+function viewExpense(btn) {
+    const row = $(btn).closest('tr');
+    const cells = row.find('td');
+    showNotification('Expense: '+cells.eq(3).text()+' — '+cells.eq(4).text(),'info');
+}
+
+$(function(){
+    // Set today's date as default
+    $('#expDate').val(new Date().toISOString().split('T')[0]);
+
+    $('#addExpenseBtn').on('click', () => openModal('addExpenseOverlay'));
+    $('#closeExpenseModal, #cancelExpenseModal').on('click', () => closeModal('addExpenseOverlay'));
+    $('.crm-modal-overlay').on('click', function(e){ if($(e.target).hasClass('crm-modal-overlay')) closeModal($(this).attr('id')); });
+
+    $('#saveExpenseBtn').on('click', function(){
+        const cat = $('#expCategory').val(), amt = $('#expAmount').val(), date = $('#expDate').val();
+        if(!cat || !amt || !date){ showNotification('Fill all required fields (*)','error'); return; }
+        const vehicle = $('#expVehicle').val() || 'N/A';
+        const type = $('#expType').val() || '—';
+        const notes = $('#expNotes').val() || '—';
+        const newRow = `<tr>
+            <td>${date}</td><td>${vehicle}</td><td>${cat}</td><td>${type}</td>
+            <td><strong>₹${Number(amt).toLocaleString('en-IN')}</strong></td>
+            <td>${notes}</td>
+            <td><button class="btn btn-sm btn-outline" onclick="viewExpense(this)">View</button></td>
+        </tr>`;
+        $('#expensesTable tbody').prepend(newRow);
+        showNotification('Expense added successfully!','success');
+        closeModal('addExpenseOverlay');
+        $('#addExpenseOverlay form')[0] && ($('#expCategory').val(''), $('#expAmount').val(''), $('#expNotes').val(''));
+    });
+});
+</script>
+</body>
+</html>

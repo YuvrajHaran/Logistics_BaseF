@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Billing - LogisticsPro</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        /* Invoice modal */
+        .inv-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;align-items:flex-start;justify-content:center;padding:1.5rem 1rem;overflow-y:auto;}
+        .inv-modal-overlay.show{display:flex;}
+        .inv-modal{position:relative;background:#fff;border-radius:1rem;width:100%;max-width:750px;z-index:1;box-shadow:0 25px 50px rgba(0,0,0,.25);}
+        .inv-modal-header{display:flex;justify-content:space-between;align-items:center;padding:1.25rem;border-bottom:1px solid var(--border);}
+        .inv-modal-header h2{margin:0;font-size:1rem;}
+        .inv-modal-close{background:none;border:none;font-size:1.25rem;cursor:pointer;color:var(--gray-500);padding:.25rem .5rem;}
+        .inv-modal-body{padding:1.25rem;max-height:70vh;overflow-y:auto;}
+        .inv-modal-footer{display:flex;gap:.625rem;padding:1.25rem;border-top:1px solid var(--border);flex-wrap:wrap;}
+        @media(max-width:600px){
+            .inv-modal-overlay{padding:.5rem 0 0;align-items:flex-end;}
+            .inv-modal{border-radius:1rem 1rem 0 0;max-height:92vh;}
+            .inv-modal-body{max-height:60vh;}
+        }
+        /* Create invoice modal */
+        .crm-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;align-items:center;justify-content:center;padding:1rem;}
+        .crm-modal-overlay.open{display:flex;}
+        @media(max-width:600px){.crm-modal-overlay{align-items:flex-end;padding:0;}.crm-modal{border-radius:1rem 1rem 0 0;max-height:92vh;}}
+    </style>
+</head>
+<body>
+<script src="assets/js/layout.js"></script>
+
+<main class="main-content">
+    <div class="page-header">
+        <h1>🧾 Billing &amp; Invoices</h1>
+        <button class="btn btn-primary" id="createInvoiceBtn">+ Create Invoice</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon blue">🧾</div>
+            <div class="stat-content"><h3>Total Invoices</h3><p class="stat-number">15</p><span class="stat-change">This Month</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green">✅</div>
+            <div class="stat-content"><h3>Paid Amount</h3><p class="stat-number">₹4,50,000</p><span class="stat-change positive">12 invoices</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange">⏳</div>
+            <div class="stat-content"><h3>Pending Amount</h3><p class="stat-number">₹75,000</p><span class="stat-change negative">3 invoices</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon blue">📋</div>
+            <div class="stat-content"><h3>GST Collected</h3><p class="stat-number">₹94,500</p><span class="stat-change">18% GST</span></div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+        <div class="filter-group">
+            <select class="filter-select" id="filterMonth">
+                <option>This Month</option><option>Last Month</option><option>Last 3 Months</option><option>This Year</option>
+            </select>
+            <select class="filter-select" id="filterClient">
+                <option value="">All Clients</option>
+                <option value="abc">ABC Builders</option>
+                <option value="xyz">XYZ Infra</option>
+                <option value="pqr">PQR Construction</option>
+            </select>
+            <select class="filter-select" id="filterStatus">
+                <option value="">All Status</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="overdue">Overdue</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <button class="btn btn-outline" onclick="showNotification('Excel export coming soon!','info')">📥 Excel</button>
+            <button class="btn btn-outline" onclick="showNotification('PDF export coming soon!','info')">📄 PDF</button>
+        </div>
+    </div>
+
+    <!-- Invoice Table -->
+    <div class="card">
+        <div class="card-header"><h2>All Invoices</h2></div>
+        <div class="card-body" style="padding:0">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th><th>Client</th><th>Vehicle</th>
+                            <th>Date</th><th>Due Date</th><th>Amount</th>
+                            <th>GST</th><th>Total</th><th>Status</th><th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>INV-0045</strong></td><td>ABC Builders</td><td>MH04 AB1234</td>
+                            <td>18-Jan-2024</td><td>25-Jan-2024</td><td>₹30,000</td><td>₹5,400</td>
+                            <td><strong>₹35,400</strong></td><td><span class="badge success">✅ Paid</span></td>
+                            <td style="white-space:nowrap">
+                                <button class="btn btn-sm btn-outline" onclick="viewInvoice(45)">View</button>
+                                <button class="btn btn-sm btn-outline" onclick="showNotification('Downloading…','info')">📥</button>
+                                <button class="btn btn-sm btn-outline" onclick="showNotification('Email sent!','success')">📧</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>INV-0044</strong></td><td>PQR Construction</td><td>GJ05 CD5678</td>
+                            <td>14-Jan-2024</td><td>21-Jan-2024</td><td>₹35,600</td><td>₹6,408</td>
+                            <td><strong>₹42,008</strong></td><td><span class="badge success">✅ Paid</span></td>
+                            <td style="white-space:nowrap">
+                                <button class="btn btn-sm btn-outline" onclick="viewInvoice(44)">View</button>
+                                <button class="btn btn-sm btn-outline" onclick="showNotification('Downloading…','info')">📥</button>
+                                <button class="btn btn-sm btn-outline" onclick="showNotification('Email sent!','success')">📧</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>INV-0043</strong></td><td>XYZ Infra</td><td>RJ06 EF9012</td>
+                            <td>10-Jan-2024</td><td>17-Jan-2024</td><td>₹23,730</td><td>₹4,271</td>
+                            <td><strong>₹28,001</strong></td><td><span class="badge danger">🔴 Overdue</span></td>
+                            <td style="white-space:nowrap">
+                                <button class="btn btn-sm btn-outline" onclick="viewInvoice(43)">View</button>
+                                <button class="btn btn-sm btn-primary" onclick="showNotification('Reminder sent!','success')">Send Reminder</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>INV-0042</strong></td><td>LMN Builders</td><td>UP07 GH3456</td>
+                            <td>02-Jan-2024</td><td>09-Jan-2024</td><td>₹29,661</td><td>₹5,339</td>
+                            <td><strong>₹35,000</strong></td><td><span class="badge success">✅ Paid</span></td>
+                            <td style="white-space:nowrap">
+                                <button class="btn btn-sm btn-outline" onclick="viewInvoice(42)">View</button>
+                                <button class="btn btn-sm btn-outline" onclick="showNotification('Downloading…','info')">📥</button>
+                                <button class="btn btn-sm btn-outline" onclick="showNotification('Email sent!','success')">📧</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>INV-0041</strong></td><td>ABC Builders</td><td>MH04 AB1234</td>
+                            <td>28-Dec-2023</td><td>04-Jan-2024</td><td>₹31,780</td><td>₹5,720</td>
+                            <td><strong>₹37,500</strong></td><td><span class="badge warning">⏳ Pending</span></td>
+                            <td style="white-space:nowrap">
+                                <button class="btn btn-sm btn-outline" onclick="viewInvoice(41)">View</button>
+                                <button class="btn btn-sm btn-primary" onclick="markPaid(41,this)">Mark Paid</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" style="padding:1rem 1.25rem">
+                <p>Showing 1–5 of 45 invoices</p>
+                <div class="pagination-buttons">
+                    <button class="btn btn-sm" disabled>← Prev</button>
+                    <button class="btn btn-sm btn-primary">1</button>
+                    <button class="btn btn-sm">2</button>
+                    <button class="btn btn-sm">3</button>
+                    <button class="btn btn-sm">Next →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Invoice View Modal -->
+<div class="inv-modal-overlay" id="invoiceModal">
+    <div class="inv-modal">
+        <div class="inv-modal-header">
+            <h2>Invoice #INV-0045</h2>
+            <button class="inv-modal-close" id="closeInvoiceModal">✕</button>
+        </div>
+        <div class="inv-modal-body">
+            <div class="invoice-header-section">
+                <div class="company-details">
+                    <h2>🚛 Janai Enterprises</h2>
+                    <p>123, Business Hub, Andheri East</p>
+                    <p>Mumbai — 400069, Maharashtra</p>
+                    <p>📞 +91 98765 43210</p>
+                    <p>📧 info@janai.com</p>
+                    <p>GSTIN: 27XXXXX1234X1ZX</p>
+                </div>
+                <div class="invoice-meta">
+                    <h3>TAX INVOICE</h3>
+                    <table class="invoice-meta-table">
+                        <tr><td>Invoice #:</td><td><strong>INV-0045</strong></td></tr>
+                        <tr><td>Date:</td><td>18-Jan-2024</td></tr>
+                        <tr><td>Due Date:</td><td>25-Jan-2024</td></tr>
+                        <tr><td>Status:</td><td><span class="badge success">✅ Paid</span></td></tr>
+                    </table>
+                </div>
+            </div>
+            <hr class="invoice-divider">
+            <div class="invoice-parties">
+                <div class="bill-to">
+                    <h4>Bill To:</h4>
+                    <p><strong>ABC Builders Pvt Ltd</strong></p>
+                    <p>456, Construction Road, Mumbai — 400050</p>
+                    <p>GSTIN: 27XXXXX5678Y1ZY</p>
+                    <p>📞 +91 87654 32109</p>
+                </div>
+                <div class="trip-details-invoice">
+                    <h4>Trip Details:</h4>
+                    <table class="invoice-meta-table">
+                        <tr><td>Trip ID:</td><td>TRP045</td></tr>
+                        <tr><td>Vehicle:</td><td>MH04 AB1234</td></tr>
+                        <tr><td>From:</td><td>Mumbai</td></tr>
+                        <tr><td>To:</td><td>Pune</td></tr>
+                        <tr><td>Distance:</td><td>150 km</td></tr>
+                    </table>
+                </div>
+            </div>
+            <hr class="invoice-divider">
+            <div class="table-responsive">
+                <table class="invoice-items-table">
+                    <thead><tr><th>#</th><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead>
+                    <tbody><tr><td>1</td><td>Concrete Transportation (Mumbai to Pune)</td><td>1</td><td>₹30,000</td><td>₹30,000</td></tr></tbody>
+                </table>
+            </div>
+            <div class="invoice-totals">
+                <div class="total-row"><span>Subtotal:</span><span>₹30,000</span></div>
+                <div class="total-row"><span>CGST (9%):</span><span>₹2,700</span></div>
+                <div class="total-row"><span>SGST (9%):</span><span>₹2,700</span></div>
+                <div class="total-row grand-total"><span>Total Amount:</span><span>₹35,400</span></div>
+            </div>
+            <p class="amount-words"><strong>Amount in Words:</strong> Thirty Five Thousand Four Hundred Rupees Only</p>
+            <div class="payment-info">
+                <p>✅ <strong>Payment Received:</strong> 20-Jan-2024</p>
+                <p>💳 <strong>Mode:</strong> Bank Transfer</p>
+            </div>
+            <div class="invoice-terms">
+                <h5>Terms &amp; Conditions:</h5>
+                <ul>
+                    <li>Payment due within 7 days of invoice date</li>
+                    <li>Interest @ 18% p.a. on delayed payments</li>
+                    <li>Subject to Mumbai jurisdiction</li>
+                </ul>
+            </div>
+        </div>
+        <div class="inv-modal-footer">
+            <button class="btn btn-outline" onclick="window.print()">🖨️ Print</button>
+            <button class="btn btn-primary" onclick="showNotification('Downloading PDF…','info')">📥 Download PDF</button>
+            <button class="btn btn-outline" onclick="showNotification('Invoice emailed!','success')">📧 Send Email</button>
+        </div>
+    </div>
+</div>
+
+<!-- Create Invoice Modal -->
+<div class="crm-modal-overlay" id="createInvoiceOverlay">
+    <div class="crm-modal">
+        <div class="crm-modal-header">
+            <h3>🧾 Create Invoice</h3>
+            <button class="crm-modal-close" id="closeCreateInvoice">✕</button>
+        </div>
+        <div class="crm-modal-body">
+            <div class="form-grid">
+                <div class="fgrp"><label>Client Name *</label><input type="text" id="invClient" placeholder="e.g. ABC Builders"></div>
+                <div class="fgrp"><label>Vehicle *</label>
+                    <select id="invVehicle"><option value="">Select</option><option>MH04 AB1234</option><option>GJ05 CD5678</option><option>RJ06 EF9012</option></select>
+                </div>
+                <div class="fgrp"><label>Invoice Date *</label><input type="date" id="invDate"></div>
+                <div class="fgrp"><label>Due Date *</label><input type="date" id="invDue"></div>
+                <div class="fgrp"><label>Trip From</label><input type="text" id="invFrom" placeholder="e.g. Mumbai"></div>
+                <div class="fgrp"><label>Trip To</label><input type="text" id="invTo" placeholder="e.g. Pune"></div>
+                <div class="fgrp"><label>Amount (₹) *</label><input type="number" id="invAmount" placeholder="e.g. 30000"></div>
+                <div class="fgrp"><label>GST %</label>
+                    <select id="invGst"><option value="18">18%</option><option value="12">12%</option><option value="5">5%</option><option value="0">0% (Exempt)</option></select>
+                </div>
+                <div class="fgrp full-width"><label>Description</label><textarea id="invDesc" rows="2" placeholder="Describe the service…"></textarea></div>
+            </div>
+        </div>
+        <div class="crm-modal-footer">
+            <button class="btn btn-outline" id="cancelCreateInvoice">Cancel</button>
+            <button class="btn btn-primary" id="saveInvoiceBtn">🧾 Create Invoice</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+function openModal(id){ $('#'+id).addClass('open'); $('body').css('overflow','hidden'); }
+function closeModal(id){ $('#'+id).removeClass('open'); $('body').css('overflow',''); }
+
+window.viewInvoice = function(id){ $('#invoiceModal').addClass('show'); };
+window.markPaid = function(id, btn){
+    if(confirm('Mark this invoice as paid?')){
+        $(btn).closest('tr').find('.badge').removeClass('warning danger').addClass('success').text('✅ Paid');
+        $(btn).replaceWith('<button class="btn btn-sm btn-outline" onclick="showNotification(\'Invoice viewed\',\'info\')">View</button>');
+        showNotification('Invoice marked as paid!','success');
+    }
+};
+
+$(function(){
+    const today = new Date().toISOString().split('T')[0];
+    $('#invDate').val(today);
+
+    $('#closeInvoiceModal').on('click', () => $('#invoiceModal').removeClass('show'));
+    $('#invoiceModal').on('click', function(e){ if(e.target === this) $('#invoiceModal').removeClass('show'); });
+
+    $('#createInvoiceBtn').on('click', () => openModal('createInvoiceOverlay'));
+    $('#closeCreateInvoice, #cancelCreateInvoice').on('click', () => closeModal('createInvoiceOverlay'));
+    $('.crm-modal-overlay').on('click', function(e){ if($(e.target).hasClass('crm-modal-overlay')) closeModal($(this).attr('id')); });
+
+    $('#saveInvoiceBtn').on('click', function(){
+        const client = $('#invClient').val().trim(), vehicle = $('#invVehicle').val(), amt = Number($('#invAmount').val()), date = $('#invDate').val();
+        if(!client || !vehicle || !amt || !date){ showNotification('Fill all required fields (*)','error'); return; }
+        const gstPct = Number($('#invGst').val()), gstAmt = Math.round(amt * gstPct / 100), total = amt + gstAmt;
+        const num = 'INV-00'+(Math.floor(Math.random()*900)+46);
+        const due = $('#invDue').val() || '—';
+        $('table.data-table tbody').prepend(`
+        <tr>
+            <td><strong>${num}</strong></td><td>${client}</td><td>${vehicle}</td>
+            <td>${date}</td><td>${due}</td>
+            <td>₹${amt.toLocaleString('en-IN')}</td>
+            <td>₹${gstAmt.toLocaleString('en-IN')}</td>
+            <td><strong>₹${total.toLocaleString('en-IN')}</strong></td>
+            <td><span class="badge warning">⏳ Pending</span></td>
+            <td style="white-space:nowrap">
+                <button class="btn btn-sm btn-outline" onclick="viewInvoice(0)">View</button>
+                <button class="btn btn-sm btn-primary" onclick="markPaid(0,this)">Mark Paid</button>
+            </td>
+        </tr>`);
+        showNotification('Invoice '+num+' created!','success');
+        closeModal('createInvoiceOverlay');
+    });
+});
+</script>
+</body>
+</html>

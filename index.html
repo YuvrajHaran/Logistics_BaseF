@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="Login - LogisticsPro">
+    <title>Login - LogisticsPro</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="login-page">
+
+<div class="login-container">
+    <div class="login-box">
+
+        <div class="login-brand">
+            <span class="brand-icon">🚛</span>
+            <h1>LogisticsPro</h1>
+            <p>Fleet Management System</p>
+        </div>
+
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="loginTab">Login</button>
+            <button class="auth-tab" id="registerTab">Register</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form id="loginForm" class="auth-form active">
+            <div class="form-group">
+                <label for="login-username">👤 Username</label>
+                <input type="text" id="login-username" placeholder="Enter your username" required autocomplete="username">
+                <span class="field-error" id="login-err-username"></span>
+            </div>
+            <div class="form-group">
+                <label for="login-password">🔒 Password</label>
+                <div class="password-field">
+                    <input type="password" id="login-password" placeholder="Enter your password" required autocomplete="current-password">
+                    <button type="button" class="toggle-password" data-target="login-password">👁️</button>
+                </div>
+                <span class="field-error" id="login-err-password"></span>
+            </div>
+            <div class="form-options">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="rememberMe">
+                    <span>Remember me</span>
+                </label>
+                <a href="#" class="forgot-link">Forgot Password?</a>
+            </div>
+            <div class="form-error-box" id="loginError"></div>
+            <button type="submit" class="btn btn-primary btn-block" id="loginBtn">Login</button>
+            <p style="text-align:center;margin-top:1rem;font-size:.875rem;color:var(--gray-500)">
+                Don't have an account?
+                <a href="#" class="switch-to-register" style="color:var(--primary);font-weight:500">Register here</a>
+            </p>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="registerForm" class="auth-form">
+            <div class="form-group">
+                <label for="reg-username">👤 Username</label>
+                <input type="text" id="reg-username" placeholder="Choose a username" required autocomplete="username">
+                <span class="field-error" id="reg-err-username"></span>
+            </div>
+            <div class="form-group">
+                <label for="reg-email">📧 Email Address</label>
+                <input type="email" id="reg-email" placeholder="Enter your email" required autocomplete="email">
+                <span class="field-error" id="reg-err-email"></span>
+            </div>
+            <div class="form-group">
+                <label for="reg-password">🔒 Password</label>
+                <div class="password-field">
+                    <input type="password" id="reg-password" placeholder="Min 6 characters" required>
+                    <button type="button" class="toggle-password" data-target="reg-password">👁️</button>
+                </div>
+                <span class="field-error" id="reg-err-password"></span>
+            </div>
+            <div class="form-group">
+                <label for="reg-confirm">🔒 Confirm Password</label>
+                <div class="password-field">
+                    <input type="password" id="reg-confirm" placeholder="Repeat your password" required>
+                    <button type="button" class="toggle-password" data-target="reg-confirm">👁️</button>
+                </div>
+                <span class="field-error" id="reg-err-confirm"></span>
+            </div>
+            <div class="form-error-box" id="registerError"></div>
+            <div class="form-success-box" id="registerSuccess"></div>
+            <button type="submit" class="btn btn-primary btn-block" id="registerBtn">Create Account</button>
+            <p style="text-align:center;margin-top:1rem;font-size:.875rem;color:var(--gray-500)">
+                Already have an account?
+                <a href="#" class="switch-to-login" style="color:var(--primary);font-weight:500">Login here</a>
+            </p>
+        </form>
+
+        <div class="login-footer">
+            <p>&copy; 2024 LogisticsPro. All rights reserved.</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="assets/js/api.js"></script>
+<script>
+const BASE_URL = 'https://crm-logistics-backend-production-bb94.up.railway.app';
+
+$(function(){
+    // If already logged in, go to dashboard
+    if(localStorage.getItem('accessToken')){
+        window.location.href = 'dashboard.html'; return;
+    }
+
+    /* ---- Tab switching ---- */
+    function switchTab(tab){
+        if(tab === 'login'){
+            $('#loginTab').addClass('active'); $('#registerTab').removeClass('active');
+            $('#loginForm').addClass('active'); $('#registerForm').removeClass('active');
+        } else {
+            $('#registerTab').addClass('active'); $('#loginTab').removeClass('active');
+            $('#registerForm').addClass('active'); $('#loginForm').removeClass('active');
+        }
+        clearErrors();
+    }
+    $('#loginTab').on('click',  () => switchTab('login'));
+    $('#registerTab').on('click',() => switchTab('register'));
+    $('.switch-to-register').on('click', e => { e.preventDefault(); switchTab('register'); });
+    $('.switch-to-login').on('click',    e => { e.preventDefault(); switchTab('login'); });
+
+    /* ---- Password toggle ---- */
+    $(document).on('click', '.toggle-password', function(){
+        const inp = $('#'+$(this).data('target'));
+        const isPass = inp.attr('type') === 'password';
+        inp.attr('type', isPass ? 'text' : 'password');
+        $(this).text(isPass ? '🙈' : '👁️');
+    });
+
+    /* ---- Clear errors on typing ---- */
+    $('input').on('input', function(){
+        $('#login-err-'+$(this).attr('id').replace('login-','')).text('');
+        $('#reg-err-'+$(this).attr('id').replace('reg-','')).text('');
+        $(this).css('border-color','');
+        $('#loginError, #registerError').hide();
+    });
+
+    /* ---- Submit handlers ---- */
+    $('#loginForm').on('submit', e => { e.preventDefault(); doLogin(); });
+    $('#registerForm').on('submit', e => { e.preventDefault(); doRegister(); });
+});
+
+function doLogin(){
+    const username = $('#login-username').val().trim();
+    const password = $('#login-password').val().trim();
+    let err = false;
+    if(!username){ showFieldErr('login','username','Username is required'); err=true; }
+    if(!password){ showFieldErr('login','password','Password is required'); err=true; }
+    if(err) return;
+
+    const btn = $('#loginBtn');
+    setBtnLoading(btn, 'Logging in…');
+
+    $.ajax({
+        url: BASE_URL+'/api/auth/login/', method:'POST', contentType:'application/json',
+        data: JSON.stringify({ username, password }),
+        success(res){
+            localStorage.setItem('accessToken', res.access);
+            localStorage.setItem('refreshToken', res.refresh);
+            localStorage.setItem('userData', JSON.stringify({ username, email: res.email||'' }));
+            if($('#rememberMe').is(':checked')) localStorage.setItem('rememberMe','true');
+            btn.html('✅ Success!');
+            setTimeout(() => window.location.href = 'dashboard.html', 700);
+        },
+        error(xhr){
+            resetBtn(btn,'Login');
+            if(xhr.status===0){ showFormErr('loginError','❌ Cannot connect to server. Check internet.'); return; }
+            const r = xhr.responseJSON;
+            let msg = 'Login failed. Please try again.';
+            if(xhr.status===401) msg='❌ Invalid username or password.';
+            else if(r){ if(r.detail) msg=r.detail; else if(r.non_field_errors) msg=r.non_field_errors[0]; }
+            showFormErr('loginError','❌ '+msg);
+        }
+    });
+}
+
+function doRegister(){
+    const username=$('#reg-username').val().trim(), email=$('#reg-email').val().trim();
+    const password=$('#reg-password').val().trim(), confirm=$('#reg-confirm').val().trim();
+    let err=false;
+    if(!username||username.length<3){ showFieldErr('reg','username',!username?'Username is required':'Min 3 characters'); err=true; }
+    if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showFieldErr('reg','email',!email?'Email is required':'Invalid email'); err=true; }
+    if(!password||password.length<6){ showFieldErr('reg','password',!password?'Password is required':'Min 6 characters'); err=true; }
+    if(!confirm||password!==confirm){ showFieldErr('reg','confirm',!confirm?'Confirm your password':'Passwords do not match'); err=true; }
+    if(err) return;
+
+    const btn=$('#registerBtn');
+    setBtnLoading(btn,'Creating account…');
+
+    $.ajax({
+        url: BASE_URL+'/api/auth/register/', method:'POST', contentType:'application/json',
+        data: JSON.stringify({ username, email, password }),
+        success(){
+            resetBtn(btn,'Create Account');
+            $('#registerSuccess').text('✅ Account created! Switching to login…').show();
+            $('#registerForm')[0].reset();
+            setTimeout(() => {
+                $('#registerSuccess').hide();
+                $('#loginTab').addClass('active'); $('#registerTab').removeClass('active');
+                $('#loginForm').addClass('active'); $('#registerForm').removeClass('active');
+            }, 2000);
+        },
+        error(xhr){
+            resetBtn(btn,'Create Account');
+            if(xhr.status===0){ showFormErr('registerError','❌ Cannot connect to server.'); return; }
+            const r=xhr.responseJSON||{};
+            if(r.username) showFieldErr('reg','username',r.username[0]);
+            if(r.email)    showFieldErr('reg','email',r.email[0]);
+            if(r.password) showFieldErr('reg','password',r.password[0]);
+            if(r.detail)   showFormErr('registerError','❌ '+r.detail);
+            if(!r.username&&!r.email&&!r.password&&!r.detail) showFormErr('registerError','❌ Registration failed. Please try again.');
+        }
+    });
+}
+
+function showFieldErr(prefix,field,msg){
+    $('#'+prefix+'-err-'+field).text(msg);
+    $('#'+prefix+'-'+field).css('border-color','var(--danger)');
+}
+function showFormErr(id,msg){ $('#'+id).text(msg).show(); }
+function clearErrors(){
+    $('.field-error').text(''); $('input').css('border-color','');
+    $('#loginError,#registerError,#registerSuccess').hide();
+}
+function setBtnLoading(btn,txt){ btn.html('<span class="btn-loader"></span>'+txt).prop('disabled',true); }
+function resetBtn(btn,txt){ btn.html(txt).prop('disabled',false); }
+</script>
+</body>
+</html>

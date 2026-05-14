@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Drivers - LogisticsPro</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        /* Modal */
+        .crm-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;align-items:center;justify-content:center;padding:1rem;}
+        .crm-modal-overlay.open{display:flex;}
+        @media(max-width:600px){.crm-modal-overlay{align-items:flex-end;padding:0;}.crm-modal{border-radius:1rem 1rem 0 0;max-height:93vh;}}
+
+        /* Driver cards grid */
+        .drivers-grid{
+            display:grid;
+            grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+            gap:1rem;
+            margin-bottom:1.25rem;
+        }
+
+        .driver-card{
+            background:var(--white);
+            border:1px solid var(--border);
+            border-radius:var(--radius-lg);
+            padding:1.25rem;
+            box-shadow:var(--shadow-sm);
+            transition:var(--transition);
+            position:relative;
+        }
+        .driver-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:var(--primary);}
+
+        .driver-card-top{display:flex;align-items:center;gap:.875rem;margin-bottom:1rem;}
+        .driver-card-avatar{
+            width:52px;height:52px;border-radius:50%;
+            background:var(--primary-light);
+            display:flex;align-items:center;justify-content:center;
+            font-size:1.5rem;flex-shrink:0;
+            border:2px solid var(--border);
+        }
+        .driver-card-name{font-size:1rem;font-weight:700;color:var(--gray-900);margin-bottom:.2rem;}
+        .driver-card-phone{font-size:.8125rem;color:var(--gray-500);}
+
+        .driver-card-info{display:flex;flex-direction:column;gap:.375rem;margin-bottom:1rem;}
+        .driver-info-row{display:flex;justify-content:space-between;font-size:.8125rem;padding:.25rem 0;border-bottom:1px solid var(--gray-100);}
+        .driver-info-row:last-child{border-bottom:none;}
+        .driver-info-label{color:var(--gray-500);font-weight:500;}
+        .driver-info-value{color:var(--gray-800);font-weight:600;text-align:right;}
+
+        .driver-card-actions{display:flex;gap:.375rem;flex-wrap:wrap;}
+        .driver-card-actions .btn{flex:1;min-width:60px;font-size:.75rem;}
+
+        /* Empty state */
+        .empty-state{
+            text-align:center;padding:4rem 1rem;
+            color:var(--gray-500);
+            grid-column:1/-1;
+        }
+        .empty-state-icon{font-size:3.5rem;margin-bottom:1rem;}
+        .empty-state h3{font-size:1.125rem;color:var(--gray-700);margin-bottom:.5rem;}
+        .empty-state p{font-size:.875rem;margin-bottom:1.25rem;}
+
+        /* Section title inside modal */
+        .modal-section-title{
+            font-size:.75rem;font-weight:700;
+            color:var(--primary);text-transform:uppercase;letter-spacing:.5px;
+            margin:0 0 .75rem;padding-bottom:.5rem;
+            border-bottom:1px solid var(--primary-light);
+        }
+
+        /* Skeleton loader */
+        .skeleton{
+            background:linear-gradient(90deg,var(--gray-100) 25%,var(--gray-50) 50%,var(--gray-100) 75%);
+            background-size:200% 100%;
+            animation:shimmer 1.4s infinite;
+            border-radius:var(--radius);
+        }
+        @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+        .skeleton-card{height:220px;border-radius:var(--radius-lg);}
+    </style>
+</head>
+<body>
+<script src="assets/js/layout.js"></script>
+
+<main class="main-content">
+
+    <div class="page-header">
+        <h1>👥 Drivers</h1>
+        <button class="btn btn-primary" id="addDriverBtn">+ Add Driver</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="driverStats" style="display:none;">
+        <div class="stat-card">
+            <div class="stat-icon blue">👥</div>
+            <div class="stat-content"><h3>Total Drivers</h3><p class="stat-number" id="statTotal">0</p><span class="stat-change">Registered</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green">✅</div>
+            <div class="stat-content"><h3>Active</h3><p class="stat-number" id="statActive">0</p><span class="stat-change positive">On duty</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange">📋</div>
+            <div class="stat-content"><h3>Expiring Soon</h3><p class="stat-number" id="statExpiring">0</p><span class="stat-change negative">License in 30 days</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon blue">💰</div>
+            <div class="stat-content"><h3>Total Salary</h3><p class="stat-number" id="statSalary">₹0</p><span class="stat-change">Per month</span></div>
+        </div>
+    </div>
+
+    <!-- Search + filter bar -->
+    <div class="filter-bar">
+        <div class="search-box">
+            <input type="text" id="searchDriver" placeholder="Search by name, phone or license…">
+        </div>
+        <div class="filter-group">
+            <button class="btn btn-outline btn-sm" id="refreshBtn" title="Refresh">🔄 Refresh</button>
+        </div>
+    </div>
+
+    <!-- Drivers grid -->
+    <div class="drivers-grid" id="driversGrid">
+        <!-- Skeleton placeholders while loading -->
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" id="driverPagination" style="display:none;">
+        <p id="paginationInfo">Showing 0 drivers</p>
+        <div class="pagination-buttons" id="paginationBtns"></div>
+    </div>
+
+</main>
+
+<!-- ═══════════════════════════════════════
+     ADD / EDIT DRIVER MODAL
+═══════════════════════════════════════ -->
+<div class="crm-modal-overlay" id="driverModalOverlay">
+    <div class="crm-modal" style="max-width:640px;">
+        <div class="crm-modal-header">
+            <h3 id="driverModalTitle">👤 Add Driver</h3>
+            <button class="crm-modal-close" id="closeDriverModal">✕</button>
+        </div>
+        <div class="crm-modal-body">
+            <form id="driverForm" novalidate>
+                <input type="hidden" id="dEditId">
+
+                <!-- Personal Info -->
+                <p class="modal-section-title">Personal Information</p>
+                <div class="form-grid" style="margin-bottom:1.125rem;">
+                    <div class="fgrp">
+                        <label>Full Name *</label>
+                        <input type="text" id="dName" placeholder="e.g. Rajan Kumar">
+                    </div>
+                    <div class="fgrp">
+                        <label>Phone Number *</label>
+                        <input type="tel" id="dPhone" placeholder="e.g. 9876543210" maxlength="15">
+                    </div>
+                </div>
+
+                <!-- License -->
+                <p class="modal-section-title">License Details</p>
+                <div class="form-grid" style="margin-bottom:1.125rem;">
+                    <div class="fgrp">
+                        <label>License Number *</label>
+                        <input type="text" id="dLicense" placeholder="e.g. MH0120210012345">
+                    </div>
+                    <div class="fgrp">
+                        <label>License Expiry Date *</label>
+                        <input type="date" id="dLicenseExpiry">
+                    </div>
+                </div>
+
+                <!-- Employment -->
+                <p class="modal-section-title">Employment Details</p>
+                <div class="form-grid" style="margin-bottom:1.125rem;">
+                    <div class="fgrp">
+                        <label>Monthly Salary (₹) *</label>
+                        <input type="number" id="dSalary" placeholder="e.g. 25000" min="0">
+                    </div>
+                    <div class="fgrp">
+                        <label>Joining Date</label>
+                        <input type="date" id="dJoining">
+                    </div>
+                </div>
+
+                <!-- Bank Details -->
+                <p class="modal-section-title">Bank Account Details</p>
+                <div class="form-grid" style="margin-bottom:1.125rem;">
+                    <div class="fgrp">
+                        <label>Account Number</label>
+                        <input type="text" id="dAccount" placeholder="e.g. 01234567890">
+                    </div>
+                    <div class="fgrp">
+                        <label>IFSC Code</label>
+                        <input type="text" id="dIfsc" placeholder="e.g. HDFC0001234" maxlength="11" style="text-transform:uppercase;">
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <p class="modal-section-title">Additional Notes</p>
+                <div class="fgrp">
+                    <label>Notes / Remarks</label>
+                    <textarea id="dNotes" rows="2" placeholder="e.g. Experienced driver, 8 years"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="crm-modal-footer">
+            <button class="btn btn-outline" id="cancelDriverModal">Cancel</button>
+            <button class="btn btn-primary" id="saveDriverBtn">💾 Save Driver</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     VIEW DRIVER MODAL
+═══════════════════════════════════════ -->
+<div class="crm-modal-overlay" id="viewDriverOverlay">
+    <div class="crm-modal" style="max-width:520px;">
+        <div class="crm-modal-header">
+            <h3>👤 Driver Details</h3>
+            <button class="crm-modal-close" id="closeViewModal">✕</button>
+        </div>
+        <div class="crm-modal-body" id="viewDriverBody">
+            <!-- Filled by JS -->
+        </div>
+        <div class="crm-modal-footer">
+            <button class="btn btn-outline" id="closeViewModalBtn">Close</button>
+            <button class="btn btn-primary" id="editFromViewBtn">✏️ Edit Driver</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     DELETE CONFIRM MODAL
+═══════════════════════════════════════ -->
+<div class="crm-modal-overlay" id="deleteDriverOverlay">
+    <div class="crm-modal" style="max-width:420px;">
+        <div class="crm-modal-header">
+            <h3>🗑 Delete Driver</h3>
+            <button class="crm-modal-close" id="closeDeleteModal">✕</button>
+        </div>
+        <div class="crm-modal-body">
+            <p style="color:var(--gray-600);">Are you sure you want to delete <strong id="deleteDriverName"></strong>? This action cannot be undone.</p>
+        </div>
+        <div class="crm-modal-footer">
+            <button class="btn btn-outline" id="cancelDeleteModal">Cancel</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">🗑 Yes, Delete</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+$(function () {
+
+    /* ─────────────────────────────
+       STATE
+    ───────────────────────────── */
+    let allDrivers   = [];   // full list from API
+    let filteredList = [];   // after search filter
+    let currentViewId = null;
+    let deleteTargetId = null;
+
+    /* ─────────────────────────────
+       MODAL HELPERS
+    ───────────────────────────── */
+    function openModal(id)  { $('#' + id).addClass('open');    $('body').css('overflow', 'hidden'); }
+    function closeModal(id) { $('#' + id).removeClass('open'); $('body').css('overflow', ''); }
+
+    $('.crm-modal-overlay').on('click', function (e) {
+        if ($(e.target).hasClass('crm-modal-overlay')) closeModal($(this).attr('id'));
+    });
+
+    /* ─────────────────────────────
+       LOAD DRIVERS FROM API
+    ───────────────────────────── */
+    function loadDrivers() {
+        showSkeletons();
+        apiRequest(API_ENDPOINTS.DRIVERS, 'GET', null, true)
+            .done(function (res) {
+                allDrivers = Array.isArray(res) ? res : (res.results || []);
+                filteredList = allDrivers.slice();
+                renderDrivers(filteredList);
+                updateStats(allDrivers);
+            })
+            .fail(function (xhr) {
+                if (xhr.status === 401) { handleSessionExpired(); return; }
+                $('#driversGrid').html(
+                    '<div class="empty-state" style="grid-column:1/-1">' +
+                    '<div class="empty-state-icon">⚠️</div>' +
+                    '<h3>Could not load drivers</h3>' +
+                    '<p style="color:var(--danger)">Server error. Please try again.</p>' +
+                    '<button class="btn btn-primary" id="retryBtn">🔄 Retry</button>' +
+                    '</div>'
+                );
+                $('#retryBtn').on('click', loadDrivers);
+            });
+    }
+
+    function showSkeletons() {
+        $('#driversGrid').html(
+            '<div class="skeleton skeleton-card"></div>' +
+            '<div class="skeleton skeleton-card"></div>' +
+            '<div class="skeleton skeleton-card"></div>'
+        );
+        $('#driverStats').hide();
+        $('#driverPagination').hide();
+    }
+
+    /* ─────────────────────────────
+       RENDER DRIVER CARDS
+    ───────────────────────────── */
+    function renderDrivers(list) {
+        if (!list.length) {
+            $('#driversGrid').html(
+                '<div class="empty-state">' +
+                '<div class="empty-state-icon">👥</div>' +
+                '<h3>No drivers found</h3>' +
+                '<p>Add your first driver to get started.</p>' +
+                '<button class="btn btn-primary" id="emptyAddBtn">+ Add Driver</button>' +
+                '</div>'
+            );
+            $('#emptyAddBtn').on('click', function () { openAddModal(); });
+            $('#driverStats').hide();
+            $('#driverPagination').hide();
+            return;
+        }
+
+        const html = list.map(function (d) {
+            const expiry    = d.license_expiry ? new Date(d.license_expiry) : null;
+            const today     = new Date(); today.setHours(0,0,0,0);
+            const daysLeft  = expiry ? Math.ceil((expiry - today) / 86400000) : null;
+            let licBadge    = '';
+            if (daysLeft !== null) {
+                if (daysLeft < 0)  licBadge = '<span class="badge danger">🔴 Expired</span>';
+                else if (daysLeft <= 30) licBadge = '<span class="badge warning">⚠️ ' + daysLeft + ' days</span>';
+                else licBadge = '<span class="badge success">✅ Valid</span>';
+            }
+
+            const salaryFmt = d.salary
+                ? '₹' + Number(d.salary).toLocaleString('en-IN')
+                : '—';
+
+            return '<div class="driver-card" data-id="' + d.id + '">' +
+                '<div class="driver-card-top">' +
+                    '<div class="driver-card-avatar">👤</div>' +
+                    '<div>' +
+                        '<div class="driver-card-name">' + escapeHtml(d.name) + '</div>' +
+                        '<div class="driver-card-phone">📞 ' + escapeHtml(d.phone || '—') + '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="driver-card-info">' +
+                    '<div class="driver-info-row"><span class="driver-info-label">License</span><span class="driver-info-value">' + escapeHtml(d.license_number || '—') + '</span></div>' +
+                    '<div class="driver-info-row"><span class="driver-info-label">Expiry</span><span class="driver-info-value">' + (d.license_expiry ? formatDate(d.license_expiry) : '—') + ' ' + licBadge + '</span></div>' +
+                    '<div class="driver-info-row"><span class="driver-info-label">Salary</span><span class="driver-info-value">' + salaryFmt + '/mo</span></div>' +
+                    '<div class="driver-info-row"><span class="driver-info-label">Joining</span><span class="driver-info-value">' + (d.joining_date ? formatDate(d.joining_date) : '—') + '</span></div>' +
+                '</div>' +
+                '<div class="driver-card-actions">' +
+                    '<button class="btn btn-sm btn-outline view-driver-btn" data-id="' + d.id + '">👁 View</button>' +
+                    '<button class="btn btn-sm btn-outline edit-driver-btn" data-id="' + d.id + '">✏️ Edit</button>' +
+                    '<button class="btn btn-sm btn-danger delete-driver-btn" data-id="' + d.id + '" data-name="' + escapeHtml(d.name) + '">🗑</button>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+
+        $('#driversGrid').html(html);
+        $('#driverStats').show();
+        $('#driverPagination').show();
+        $('#paginationInfo').text('Showing ' + list.length + ' of ' + allDrivers.length + ' drivers');
+    }
+
+    /* ─────────────────────────────
+       UPDATE STATS CARDS
+    ───────────────────────────── */
+    function updateStats(list) {
+        const today = new Date(); today.setHours(0,0,0,0);
+        const in30  = new Date(today); in30.setDate(in30.getDate() + 30);
+
+        let totalSalary = 0, expiring = 0;
+        list.forEach(function (d) {
+            totalSalary += Number(d.salary) || 0;
+            if (d.license_expiry) {
+                const exp = new Date(d.license_expiry);
+                if (exp >= today && exp <= in30) expiring++;
+            }
+        });
+
+        $('#statTotal').text(list.length);
+        $('#statActive').text(list.length); // all loaded = active; adjust if API provides status
+        $('#statExpiring').text(expiring);
+        $('#statSalary').text('₹' + totalSalary.toLocaleString('en-IN'));
+    }
+
+    /* ─────────────────────────────
+       SEARCH
+    ───────────────────────────── */
+    $('#searchDriver').on('input', function () {
+        const q = $(this).val().toLowerCase().trim();
+        filteredList = q
+            ? allDrivers.filter(function (d) {
+                return (d.name || '').toLowerCase().includes(q)
+                    || (d.phone || '').includes(q)
+                    || (d.license_number || '').toLowerCase().includes(q);
+              })
+            : allDrivers.slice();
+        renderDrivers(filteredList);
+    });
+
+    /* ─────────────────────────────
+       REFRESH
+    ───────────────────────────── */
+    $('#refreshBtn').on('click', function () {
+        $('#searchDriver').val('');
+        loadDrivers();
+    });
+
+    /* ─────────────────────────────
+       OPEN ADD MODAL
+    ───────────────────────────── */
+    function openAddModal() {
+        $('#driverModalTitle').text('👤 Add Driver');
+        $('#driverForm')[0].reset();
+        $('#dEditId').val('');
+        $('#dJoining').val(new Date().toISOString().split('T')[0]);
+        openModal('driverModalOverlay');
+    }
+    $('#addDriverBtn').on('click', openAddModal);
+    $('#closeDriverModal, #cancelDriverModal').on('click', () => closeModal('driverModalOverlay'));
+
+    /* ─────────────────────────────
+       OPEN EDIT MODAL
+    ───────────────────────────── */
+    $(document).on('click', '.edit-driver-btn', function () {
+        const id = $(this).data('id');
+        const d  = allDrivers.find(function (x) { return x.id == id; });
+        if (!d) { showNotification('Driver not found', 'error'); return; }
+
+        $('#driverModalTitle').text('✏️ Edit Driver');
+        $('#dEditId').val(d.id);
+        $('#dName').val(d.name || '');
+        $('#dPhone').val(d.phone || '');
+        $('#dLicense').val(d.license_number || '');
+        $('#dLicenseExpiry').val(d.license_expiry || '');
+        $('#dSalary').val(d.salary || '');
+        $('#dJoining').val(d.joining_date || '');
+        $('#dAccount').val(d.account_number || '');
+        $('#dIfsc').val(d.ifsc_code || '');
+        $('#dNotes').val(d.notes || '');
+        openModal('driverModalOverlay');
+    });
+
+    /* ─────────────────────────────
+       EDIT FROM VIEW MODAL
+    ───────────────────────────── */
+    $('#editFromViewBtn').on('click', function () {
+        closeModal('viewDriverOverlay');
+        if (currentViewId) {
+            setTimeout(function () {
+                $('.edit-driver-btn[data-id="' + currentViewId + '"]').trigger('click');
+            }, 150);
+        }
+    });
+
+    /* ─────────────────────────────
+       SAVE DRIVER (POST / PATCH)
+    ───────────────────────────── */
+    $('#saveDriverBtn').on('click', function () {
+        const name    = $('#dName').val().trim();
+        const phone   = $('#dPhone').val().trim();
+        const license = $('#dLicense').val().trim();
+        const expiry  = $('#dLicenseExpiry').val();
+        const salary  = $('#dSalary').val().trim();
+
+        if (!name)    { showNotification('Full name is required', 'error');          $('#dName').focus();          return; }
+        if (!phone)   { showNotification('Phone number is required', 'error');       $('#dPhone').focus();         return; }
+        if (!license) { showNotification('License number is required', 'error');     $('#dLicense').focus();       return; }
+        if (!expiry)  { showNotification('License expiry date is required', 'error');$('#dLicenseExpiry').focus(); return; }
+        if (!salary)  { showNotification('Monthly salary is required', 'error');     $('#dSalary').focus();        return; }
+
+        const payload = {
+            name:           name,
+            phone:          phone,
+            license_number: license,
+            license_expiry: expiry,
+            salary:         salary,
+            joining_date:   $('#dJoining').val() || null,
+            account_number: $('#dAccount').val().trim() || null,
+            ifsc_code:      $('#dIfsc').val().trim().toUpperCase() || null,
+            notes:          $('#dNotes').val().trim() || null,
+        };
+
+        const editId = $('#dEditId').val();
+        const isEdit = editId !== '';
+        const btn    = $(this);
+        btn.text('Saving…').prop('disabled', true);
+
+        const endpoint = isEdit
+            ? API_ENDPOINTS.DRIVER_DETAIL.replace('{id}', editId)
+            : API_ENDPOINTS.DRIVERS;
+        const method = isEdit ? 'PATCH' : 'POST';
+
+        apiRequest(endpoint, method, payload, true)
+            .done(function (res) {
+                btn.text('💾 Save Driver').prop('disabled', false);
+                showNotification(isEdit ? 'Driver updated successfully!' : 'Driver added successfully!', 'success');
+                closeModal('driverModalOverlay');
+                loadDrivers(); // refresh list
+            })
+            .fail(function (xhr) {
+                btn.text('💾 Save Driver').prop('disabled', false);
+                if (xhr.status === 401) { handleSessionExpired(); return; }
+                let msg = isEdit ? 'Failed to update driver.' : 'Failed to add driver.';
+                if (xhr.responseJSON) {
+                    const errs = xhr.responseJSON;
+                    const firstKey = Object.keys(errs)[0];
+                    if (firstKey) msg = firstKey + ': ' + (Array.isArray(errs[firstKey]) ? errs[firstKey][0] : errs[firstKey]);
+                }
+                showNotification(msg, 'error');
+            });
+    });
+
+    /* ─────────────────────────────
+       VIEW DRIVER DETAIL
+    ───────────────────────────── */
+    $(document).on('click', '.view-driver-btn', function () {
+        const id = $(this).data('id');
+        currentViewId = id;
+        // Try from cache first, then fetch detail
+        const cached = allDrivers.find(function (x) { return x.id == id; });
+        if (cached) {
+            renderViewModal(cached);
+            openModal('viewDriverOverlay');
+        } else {
+            openModal('viewDriverOverlay');
+            $('#viewDriverBody').html('<div style="text-align:center;padding:2rem;color:var(--gray-500)">Loading…</div>');
+            apiRequest(API_ENDPOINTS.DRIVER_DETAIL.replace('{id}', id), 'GET', null, true)
+                .done(function (d) { renderViewModal(d); })
+                .fail(function ()  { $('#viewDriverBody').html('<p style="color:var(--danger);text-align:center;padding:1rem">Failed to load driver details.</p>'); });
+        }
+    });
+
+    function renderViewModal(d) {
+        const expiry   = d.license_expiry ? new Date(d.license_expiry) : null;
+        const today    = new Date(); today.setHours(0,0,0,0);
+        const daysLeft = expiry ? Math.ceil((expiry - today) / 86400000) : null;
+        let licStatus  = '—';
+        if (daysLeft !== null) {
+            if (daysLeft < 0)  licStatus = '<span class="badge danger">🔴 Expired ' + Math.abs(daysLeft) + ' days ago</span>';
+            else if (daysLeft <= 30) licStatus = '<span class="badge warning">⚠️ Expires in ' + daysLeft + ' days</span>';
+            else licStatus = '<span class="badge success">✅ Valid (' + daysLeft + ' days left)</span>';
+        }
+
+        $('#viewDriverBody').html(
+            '<div style="text-align:center;margin-bottom:1.25rem;">' +
+                '<div style="width:64px;height:64px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto .75rem;">👤</div>' +
+                '<h3 style="margin:0;font-size:1.125rem;">' + escapeHtml(d.name) + '</h3>' +
+                '<p style="color:var(--gray-500);font-size:.875rem;margin-top:.25rem;">📞 ' + escapeHtml(d.phone || '—') + '</p>' +
+            '</div>' +
+            '<div style="display:flex;flex-direction:column;gap:0;">' +
+                row('License No.',  d.license_number) +
+                row('Expiry Date',  d.license_expiry ? formatDate(d.license_expiry) : '—') +
+                row('License Status', licStatus, true) +
+                row('Salary',       d.salary ? '₹' + Number(d.salary).toLocaleString('en-IN') + ' / month' : '—') +
+                row('Joining Date', d.joining_date ? formatDate(d.joining_date) : '—') +
+                row('Bank Account', d.account_number || '—') +
+                row('IFSC Code',    d.ifsc_code || '—') +
+                row('Notes',        d.notes || '—') +
+            '</div>'
+        );
+    }
+
+    function row(label, value, raw) {
+        const val = raw ? value : '<span style="font-weight:600;color:var(--gray-800);">' + escapeHtml(String(value)) + '</span>';
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:.625rem 0;border-bottom:1px solid var(--border);">' +
+               '<span style="font-size:.8125rem;color:var(--gray-500);font-weight:500;">' + label + '</span>' +
+               '<span style="font-size:.8125rem;text-align:right;">' + val + '</span>' +
+               '</div>';
+    }
+
+    $('#closeViewModal, #closeViewModalBtn').on('click', () => closeModal('viewDriverOverlay'));
+
+    /* ─────────────────────────────
+       DELETE DRIVER
+    ───────────────────────────── */
+    $(document).on('click', '.delete-driver-btn', function () {
+        deleteTargetId = $(this).data('id');
+        $('#deleteDriverName').text($(this).data('name'));
+        openModal('deleteDriverOverlay');
+    });
+
+    $('#confirmDeleteBtn').on('click', function () {
+        if (!deleteTargetId) return;
+        const btn = $(this);
+        btn.text('Deleting…').prop('disabled', true);
+
+        apiRequest(API_ENDPOINTS.DRIVER_DETAIL.replace('{id}', deleteTargetId), 'DELETE', null, true)
+            .done(function () {
+                btn.text('🗑 Yes, Delete').prop('disabled', false);
+                showNotification('Driver deleted successfully!', 'success');
+                closeModal('deleteDriverOverlay');
+                loadDrivers();
+                deleteTargetId = null;
+            })
+            .fail(function (xhr) {
+                btn.text('🗑 Yes, Delete').prop('disabled', false);
+                if (xhr.status === 401) { handleSessionExpired(); return; }
+                showNotification('Failed to delete driver.', 'error');
+            });
+    });
+
+    $('#closeDeleteModal, #cancelDeleteModal').on('click', () => closeModal('deleteDriverOverlay'));
+
+    /* ─────────────────────────────
+       HELPERS
+    ───────────────────────────── */
+    function formatDate(dateStr) {
+        if (!dateStr) return '—';
+        return new Date(dateStr).toLocaleDateString('en-IN', { year:'numeric', month:'short', day:'numeric' });
+    }
+    function escapeHtml(str) {
+        if (!str && str !== 0) return '';
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    /* ─────────────────────────────
+       INIT — load on page open
+    ───────────────────────────── */
+    loadDrivers();
+});
+</script>
+</body>
+</html>

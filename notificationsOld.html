@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Notifications - LogisticsPro</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+    <script src="assets/js/layout.js"></script>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>🔔 Notifications</h1>
+            <button class="btn btn-outline" id="markAllReadBtn">✅ Mark All Read</button>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="notification-tabs">
+            <button class="notif-tab active" data-filter="all">All <span class="tab-count"
+                    id="count-all">12</span></button>
+            <button class="notif-tab" data-filter="unread">Unread <span class="tab-count danger"
+                    id="count-unread">8</span></button>
+            <button class="notif-tab" data-filter="urgent">🔴 Urgent <span class="tab-count danger"
+                    id="count-urgent">3</span></button>
+            <button class="notif-tab" data-filter="warning">⚠️ Warning <span class="tab-count warning"
+                    id="count-warning">4</span></button>
+            <button class="notif-tab" data-filter="info">ℹ️ Info <span class="tab-count"
+                    id="count-info">5</span></button>
+        </div>
+
+        <div class="notifications-container" id="notificationsList">
+
+            <!-- Today -->
+            <div class="notif-group">
+                <h3 class="notif-group-title">Today</h3>
+
+                <div class="notif-card unread urgent" data-type="urgent">
+                    <div class="notif-icon urgent">🔴</div>
+                    <div class="notif-content">
+                        <div class="notif-header">
+                            <h4>EMI Due Today — GJ05 CD5678</h4>
+                            <span class="notif-time">2 hours ago</span>
+                        </div>
+                        <p>EMI payment of <strong>₹42,000</strong> is due today for GJ05 CD5678. Bank: ICICI Bank.</p>
+                        <div class="notif-actions">
+                            <a href="vehicle-detail.html?id=2" class="btn btn-sm btn-primary">View Vehicle</a>
+                            <button class="btn btn-sm btn-outline mark-read-btn">Mark as Read</button>
+                        </div>
+                    </div>
+                    <div class="notif-unread-dot"></div>
+                </div>
+
+                <div class="notif-card unread urgent" data-type="urgent">
+                    <div class="notif-icon urgent">🔴</div>
+                    <div class="notif-content">
+                        <div class="notif-header">
+                            <h4>Permit Expired — RJ06 EF9012</h4>
+                            <span class="notif-time">5 hours ago</span>
+                        </div>
+                        <p>Vehicle permit for <strong>RJ06 EF9012</strong> has expired. Renew immediately to avoid
+                            penalties.</p>
+                        <div class="notif-actions">
+                            <a href="vehicle-detail.html?id=3" class="btn btn-sm btn-danger">Renew Now</a>
+                            <button class="btn btn-sm btn-outline mark-read-btn">Mark as Read</button>
+                        </div>
+                    </div>
+                    <div class="notif-unread-dot"></div>
+                </div>
+
+                <div class="notif-card unread warning" data-type="warning">
+                    <div class="notif-icon warning">⚠️</div>
+                    <div class="notif-content">
+                        <div class="notif-header">
+                            <h4>Insurance Expiring Soon — MH04 AB1234</h4>
+                            <span class="notif-time">8 hours ago</span>
+                        </div>
+                        <p>Insurance for <strong>MH04 AB1234</strong> expires in <strong>5 days</strong> (05-Mar-2024).
+                            Please renew.</p>
+                        <div class="notif-actions">
+                            <a href="vehicle-detail.html?id=1" class="btn btn-sm btn-primary">View Details</a>
+                            <button class="btn btn-sm btn-outline mark-read-btn">Mark as Read</button>
+                        </div>
+                    </div>
+                    <div class="notif-unread-dot"></div>
+                </div>
+
+                <div class="notif-card unread warning" data-type="warning">
+                    <div class="notif-icon warning">⚠️</div>
+                    <div class="notif-content">
+                        <div class="notif-header">
+                            <h4>Tyre Change Required — MH04 AB1234</h4>
+                            <span class="notif-time">10 hours ago</span>
+                        </div>
+                        <p>Tyre change due for <strong>MH04 AB1234</strong>. Running: 45,000 km. Change at: 50,000 km.
+                            Remaining: 5,000 km.</p>
+                        <div class="notif-actions">
+                            <a href="vehicle-detail.html?id=1" class="btn btn-sm btn-primary">View Vehicle</a>
+                            <button class="btn btn-sm btn-outline mark-read-btn">Mark as Read</button>
+                        </div>
+                    </div>
+                    <div class="notif-unread-dot"></div>
+                </div>
+            </div>
+
+            <!-- Yesterday -->
+            <div class="notif-group">
+                <h3 class="notif-group-title">Yesterday</h3>
+
+                <div class="notif-card unread warning" data-type="warning">
+                    <div class="notif-icon warning">⚠️</div>
+                    <div class="notif-content">
+                        <div class="notif-header">
+                            <h4>EMI Due in 5 Days — MH04 AB1234</h4>
+                            <span class="notif-time">1 day ago</span>
+                        </div>
+                        <p>EMI of <strong>₹45,000</strong> is due on <strong>05-Feb-2024</strong> for MH04 AB1234. Bank:
+                            HDFC Bank.</p>
+                        <div class="notif-actions">
+                            <a href="vehicle-detail.html?id=1" class="btn btn-sm btn-primary">View Details</a>
+                            <button class="btn btn-sm btn-outline mark-read-btn">Mark as Read</button>
+                        </div>
+                    </div>
+                    <div class="notif-unread-dot"></div>
+                </div>
+
+                <div class="notif-card unread info" data-type="info">
+                    <div class="notif-icon info">ℹ️</div>
+                    <div class="notif-content">
+                        <div class="notif-header">
+                            <h4>Service Due — UP07 GH3456</h4>
+                            <span class="notif-time">1 day ago</span>
+                        </div>
+                        <p>Regular service due for <strong>UP07 GH3456</strong> in 7 days. Last service: 05-Oct-2023.
+                        </p>
+                        <div class="notif-actions">
+                            <a href="vehicle-detail.html?id=4" class="btn btn-sm btn-primary">View Vehicle</a>
+                            <button class="btn btn-sm btn-outline mark-read-btn">Mark as Read</button>
+                        </div>
+                    </div>
+                    <div class="notif-unread-dot"></div>
+                </div>
+
+                <div class="notif-card unread urgent" data-type="urgent">
+                    <div class="notif-icon urgent">🔴</div>
+                    <div class="notif-content">
+                        <div class="notif-header">
+                            <h4>Fitness Certificate Expired — DL08 IJ7890</h4>
+                            <span class="notif-time">1 day ago</span>
+                        </div>
+                        <p>Fitness certificate for <strong>DL08 IJ7890</strong> expired yesterday. Renew immediately.
+                        </p>
+                        <div class="notif-actions">
+                            <a href="vehicle-detail.html?id=5" class="btn btn-sm btn-danger">Renew Now</a>
+                            <button class="btn btn-sm btn-outline mark-read-btn">Mark as Read</button>
+                        </div>
+                    </div>
+                    <div class="notif-unread-dot"></div>
+                </div>
+            </div>
+
+            <!-- Older -->
+            <div class="notif-group">
+                <h3 class="notif-group-title">Older</h3>
+
+                <div class="notif-card read info" data-type="info">
+                    <div class="notif-icon info">ℹ️</div>
+                    <div class="notif-content">
+                        <div class="notif-header">
+                            <h4>GST Payment Due — January 2024</h4>
+                            <span class="notif-time">3 days ago</span>
+                        </div>
+                        <p>GST payment for January 2024 is due on <strong>20-Feb-2024</strong>. Estimated amount:
+                            ₹94,500.</p>
+                        <div class="notif-actions">
+                            <a href="reports.html" class="btn btn-sm btn-outline">View GST Report</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="notif-card read info" data-type="info">
+                    <div class="notif-icon info">ℹ️</div>
+                    <div class="notif-content">
+                        <div class="notif-header">
+                            <h4>Payment Received — ABC Builders</h4>
+                            <span class="notif-time">5 days ago</span>
+                        </div>
+                        <p>Payment of <strong>₹35,000</strong> received from ABC Builders for Invoice #INV-0045.</p>
+                        <div class="notif-actions">
+                            <a href="billing.html" class="btn btn-sm btn-outline">View Invoice</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="notif-card read info" data-type="info">
+                    <div class="notif-icon info">ℹ️</div>
+                    <div class="notif-content">
+                        <div class="notif-header">
+                            <h4>Service Completed — RJ06 EF9012</h4>
+                            <span class="notif-time">7 days ago</span>
+                        </div>
+                        <p>Regular service completed for <strong>RJ06 EF9012</strong>. Cost: ₹9,000. Next service due:
+                            15-Apr-2024.</p>
+                        <div class="notif-actions">
+                            <a href="vehicle-detail.html?id=3" class="btn btn-sm btn-outline">View Details</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="notif-card read info" data-type="info">
+                    <div class="notif-icon info">ℹ️</div>
+                    <div class="notif-content">
+                        <div class="notif-header">
+                            <h4>Road Tax Due — DL08 IJ7890</h4>
+                            <span class="notif-time">7 days ago</span>
+                        </div>
+                        <p>Road tax for <strong>DL08 IJ7890</strong> is due on <strong>31-Mar-2024</strong>. Amount:
+                            ₹18,000.</p>
+                        <div class="notif-actions">
+                            <a href="vehicle-detail.html?id=5" class="btn btn-sm btn-outline">View Vehicle</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /notifications-container -->
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/vehicles.js"></script>
+    <script>
+        $(function () {
+            function updateCounts() {
+                const unread = $('.notif-card.unread').length;
+                const urgent = $('.notif-card[data-type="urgent"]').length;
+                const warning = $('.notif-card[data-type="warning"]').length;
+                const info = $('.notif-card[data-type="info"]').length;
+                const total = $('.notif-card').length;
+                $('#count-all').text(total);
+                $('#count-unread').text(unread);
+                $('#count-urgent').text(urgent);
+                $('#count-warning').text(warning);
+                $('#count-info').text(info);
+                // Update header badge
+                $('#notifBadge, #sidebarNotifBadge, #bottomNotifBadge').text(unread);
+            }
+
+            // Tab filter
+            $('.notif-tab').on('click', function () {
+                $('.notif-tab').removeClass('active');
+                $(this).addClass('active');
+                const filter = $(this).data('filter');
+                if (filter === 'all') { $('.notif-card').show(); }
+                else if (filter === 'unread') { $('.notif-card').hide(); $('.notif-card.unread').show(); }
+                else { $('.notif-card').hide(); $('.notif-card[data-type="' + filter + '"]').show(); }
+            });
+
+            // Mark single as read
+            $(document).on('click', '.mark-read-btn', function () {
+                const card = $(this).closest('.notif-card');
+                card.removeClass('unread').addClass('read');
+                card.find('.notif-unread-dot').remove();
+                $(this).remove();
+                updateCounts();
+                showNotification('Marked as read', 'success');
+            });
+
+            // Mark all as read
+            $('#markAllReadBtn').on('click', function () {
+                $('.notif-card').removeClass('unread').addClass('read');
+                $('.notif-unread-dot').remove();
+                $('.mark-read-btn').remove();
+                updateCounts();
+                showNotification('All notifications marked as read', 'success');
+            });
+        });
+    </script>
+</body>
+
+</html>

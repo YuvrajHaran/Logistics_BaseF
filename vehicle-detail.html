@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Vehicle Details - LogisticsPro</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .crm-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .55);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .crm-modal-overlay.open {
+            display: flex;
+        }
+
+        @media(max-width:600px) {
+            .crm-modal-overlay {
+                align-items: flex-end;
+                padding: 0;
+            }
+
+            .crm-modal {
+                border-radius: 1rem 1rem 0 0;
+                max-height: 92vh;
+            }
+        }
+
+        /* Change driver dropdown */
+        .driver-change-wrap {
+            position: relative;
+            display: inline-block;
+        }
+
+        .driver-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            min-width: 220px;
+            z-index: 500;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        .driver-dropdown-menu.open {
+            display: block;
+            animation: dropIn .18s ease;
+        }
+
+        @keyframes dropIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .driver-option {
+            display: flex;
+            align-items: center;
+            gap: .625rem;
+            padding: .75rem 1rem;
+            font-size: .875rem;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .driver-option:hover {
+            background: var(--primary-light);
+        }
+
+        .driver-option.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .driver-option .driver-opt-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--gray-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .driver-option .driver-opt-info {
+            min-width: 0;
+        }
+
+        .driver-option .driver-opt-name {
+            font-weight: 500;
+            color: var(--gray-900);
+        }
+
+        .driver-option .driver-opt-phone {
+            font-size: .75rem;
+            color: var(--gray-500);
+        }
+
+        .driver-dropdown-divider {
+            height: 1px;
+            background: var(--border);
+            margin: .25rem 0;
+        }
+
+        .driver-option.unassign {
+            color: var(--danger);
+        }
+
+        .driver-option.unassign:hover {
+            background: var(--danger-light);
+        }
+
+        /* Document upload area */
+        .file-drop-zone {
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--gray-50);
+        }
+
+        .file-drop-zone:hover,
+        .file-drop-zone.dragover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .file-drop-zone input {
+            display: none;
+        }
+
+        .file-drop-zone .file-icon {
+            font-size: 2rem;
+            margin-bottom: .375rem;
+        }
+
+        .file-drop-zone p {
+            font-size: .8125rem;
+            color: var(--gray-500);
+            margin: 0;
+        }
+
+        .file-selected-name {
+            font-size: .8125rem;
+            color: var(--success);
+            font-weight: 500;
+            margin-top: .375rem;
+        }
+
+        /* Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-50) 50%, var(--gray-100) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: var(--radius);
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0
+            }
+
+            100% {
+                background-position: -200% 0
+            }
+        }
+
+        .sk-line {
+            height: 16px;
+            margin-bottom: 10px;
+        }
+
+        .sk-line.wide {
+            width: 100%;
+        }
+
+        .sk-line.mid {
+            width: 65%;
+        }
+
+        .sk-line.short {
+            width: 40%;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="assets/js/layout.js"></script>
+
+    <main class="main-content">
+
+        <!-- Back + actions -->
+        <div
+            style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:.875rem;">
+            <a href="vehicles.html" class="btn btn-outline">← Back to Vehicles</a>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;" id="headerActions" style="display:none;">
+                <button class="btn btn-outline" id="editVehicleBtn">✏️ Edit Vehicle</button>
+                <button class="btn btn-danger" id="deleteVehicleBtn">🗑️ Delete</button>
+            </div>
+        </div>
+
+        <!-- Vehicle header (filled by JS) -->
+        <div class="vehicle-detail-header" id="vehicleHeader">
+            <div class="vehicle-main-info">
+                <div class="skeleton sk-line wide" style="height:28px;margin-bottom:10px;max-width:280px;"></div>
+                <div class="skeleton sk-line mid"></div>
+                <div class="skeleton sk-line short"></div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="basic">Basic Info</button>
+            <button class="tab-btn" data-tab="documents">Documents</button>
+            <button class="tab-btn" data-tab="expenses">Expenses</button>
+            <button class="tab-btn" data-tab="earnings">Earnings</button>
+            <button class="tab-btn" data-tab="trips">Trips</button>
+            <button class="tab-btn" data-tab="maintenance">Maintenance</button>
+        </div>
+
+        <!-- ── BASIC INFO ── -->
+        <div class="tab-pane active" id="basic">
+            <div class="detail-grid">
+
+                <!-- Vehicle details card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Vehicle Details</h2>
+                    </div>
+                    <div class="card-body" id="vehicleInfoBody">
+                        <div class="skeleton sk-line wide"></div>
+                        <div class="skeleton sk-line mid"></div>
+                        <div class="skeleton sk-line wide"></div>
+                        <div class="skeleton sk-line short"></div>
+                        <div class="skeleton sk-line wide"></div>
+                    </div>
+                </div>
+
+                <!-- Driver card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Driver Details</h2>
+                        <!-- Change Driver dropdown button -->
+                        <div class="driver-change-wrap">
+                            <button class="btn btn-sm btn-primary" id="changeDriverBtn">🔄 Change Driver ▾</button>
+                            <div class="driver-dropdown-menu" id="driverDropdownMenu">
+                                <div
+                                    style="padding:.625rem 1rem;font-size:.75rem;color:var(--gray-500);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">
+                                    Select Driver</div>
+                                <div class="driver-dropdown-divider"></div>
+                                <div id="driverOptionsList">
+                                    <div
+                                        style="padding:1rem;text-align:center;color:var(--gray-400);font-size:.875rem;">
+                                        Loading drivers…</div>
+                                </div>
+                                <div class="driver-dropdown-divider"></div>
+                                <div class="driver-option unassign" id="unassignDriverBtn">
+                                    <div class="driver-opt-avatar">✕</div>
+                                    <div class="driver-opt-info">
+                                        <div class="driver-opt-name">Remove Driver</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body" id="driverInfoBody">
+                        <div class="skeleton sk-line wide"></div>
+                        <div class="skeleton sk-line mid"></div>
+                        <div class="skeleton sk-line wide"></div>
+                        <div class="skeleton sk-line short"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EMI (static — dynamic later) -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>EMI / Loan Details</h2><span style="font-size:.8125rem;color:var(--gray-400);">Dynamic
+                        integration coming soon</span>
+                </div>
+                <div class="card-body">
+                    <div class="detail-grid" style="margin:0;">
+                        <div>
+                            <div class="detail-row"><span class="label">Bank Name</span><span class="value">HDFC
+                                    Bank</span></div>
+                            <div class="detail-row"><span class="label">Loan Amount</span><span
+                                    class="value">₹18,00,000</span></div>
+                            <div class="detail-row"><span class="label">EMI Amount</span><span
+                                    class="value">₹45,000/month</span></div>
+                        </div>
+                        <div>
+                            <div class="detail-row"><span class="label">EMI Date</span><span class="value">5th of every
+                                    month</span></div>
+                            <div class="detail-row"><span class="label">Remaining EMIs</span><span class="value">15
+                                    months</span></div>
+                            <div class="detail-row highlight"><span class="label">Next EMI Due</span><span
+                                    class="value warning">05-Feb-2024 ⚠️</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── DOCUMENTS (dynamic) ── -->
+        <div class="tab-pane" id="documents">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Vehicle Documents</h2>
+                    <button class="btn btn-primary btn-sm" id="addDocumentBtn">+ Add Document</button>
+                </div>
+                <div class="card-body" style="padding:0;" id="docsTableWrap">
+                    <div style="padding:2rem;text-align:center;color:var(--gray-400);">
+                        <div class="skeleton sk-line wide" style="margin:0 auto 8px;max-width:400px;"></div>
+                        <div class="skeleton sk-line mid" style="margin:0 auto 8px;max-width:300px;"></div>
+                        <div class="skeleton sk-line wide" style="margin:0 auto;max-width:400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── EXPENSES (static placeholder) ── -->
+        <div class="tab-pane" id="expenses">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Expenses</h2><button class="btn btn-primary btn-sm" id="addExpenseBtn">+ Add Expense</button>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-responsive">
+                        <table class="data-table" id="expensesTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Category</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Notes</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>20-Jan-2024</td>
+                                    <td>💰 Finance</td>
+                                    <td>EMI</td>
+                                    <td>₹45,000</td>
+                                    <td>HDFC Bank</td>
+                                    <td><button class="btn btn-sm btn-outline"
+                                            onclick="showNotification('Coming soon!','info')">View</button></td>
+                                </tr>
+                                <tr>
+                                    <td>18-Jan-2024</td>
+                                    <td>⛽ Fuel</td>
+                                    <td>Diesel</td>
+                                    <td>₹12,000</td>
+                                    <td>200L, HP</td>
+                                    <td><button class="btn btn-sm btn-outline"
+                                            onclick="showNotification('Coming soon!','info')">View</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── EARNINGS (static placeholder) ── -->
+        <div class="tab-pane" id="earnings">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Earnings</h2><button class="btn btn-primary btn-sm"
+                        onclick="showNotification('Connect billing API first','info')">+ Add Earning</button>
+                </div>
+                <div class="card-body">
+                    <div class="financial-summary" style="margin-bottom:1.25rem;">
+                        <div class="summary-card success">
+                            <h3>Total Earnings</h3>
+                            <p class="amount">₹1,05,000</p>
+                        </div>
+                        <div class="summary-card danger">
+                            <h3>Total Expenses</h3>
+                            <p class="amount">₹95,000</p>
+                        </div>
+                        <div class="summary-card primary">
+                            <h3>Net Profit</h3>
+                            <p class="amount">₹10,000</p>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Client</th>
+                                    <th>Trip ID</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>18-Jan-2024</td>
+                                    <td>ABC Builders</td>
+                                    <td>TRP045</td>
+                                    <td>₹35,000</td>
+                                    <td><span class="badge success">✅ Paid</span></td>
+                                    <td><button class="btn btn-sm btn-outline"
+                                            onclick="showNotification('Coming soon!','info')">View</button></td>
+                                </tr>
+                                <tr>
+                                    <td>10-Jan-2024</td>
+                                    <td>XYZ Infra</td>
+                                    <td>TRP039</td>
+                                    <td>₹28,000</td>
+                                    <td><span class="badge warning">⏳ Pending</span></td>
+                                    <td><button class="btn btn-sm btn-primary"
+                                            onclick="showNotification('Marked!','success')">Mark Paid</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TRIPS (static placeholder) ── -->
+        <div class="tab-pane" id="trips">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Trip History</h2><button class="btn btn-primary btn-sm" id="addTripBtn">+ Add Trip</button>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-responsive">
+                        <table class="data-table" id="tripsTable">
+                            <thead>
+                                <tr>
+                                    <th>Trip ID</th>
+                                    <th>Date</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Distance</th>
+                                    <th>Client</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>TRP045</td>
+                                    <td>18-Jan-2024</td>
+                                    <td>Mumbai</td>
+                                    <td>Pune</td>
+                                    <td>150 km</td>
+                                    <td>ABC Builders</td>
+                                    <td><span class="badge success">✅ Completed</span></td>
+                                    <td><button class="btn btn-sm btn-outline"
+                                            onclick="showNotification('Coming soon!','info')">View</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── MAINTENANCE (static placeholder) ── -->
+        <div class="tab-pane" id="maintenance">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Maintenance Schedule</h2>
+                </div>
+                <div class="card-body">
+                    <div class="maintenance-item">
+                        <div class="maintenance-icon">🛞</div>
+                        <div class="maintenance-content">
+                            <h3>Tyre Status</h3>
+                            <div class="progress-info"><span>Current: 45,000 km</span><span>Change at: 50,000 km</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill warning" style="width:90%"></div>
+                            </div>
+                            <p class="warning-text">⚠️ Remaining: 5,000 km</p>
+                        </div>
+                    </div>
+                    <div class="maintenance-item">
+                        <div class="maintenance-icon">⚙️</div>
+                        <div class="maintenance-content">
+                            <h3>Service Status</h3>
+                            <div class="detail-row"><span class="label">Last Service</span><span
+                                    class="value">05-Jan-2024</span></div>
+                            <div class="detail-row"><span class="label">Next Service</span><span
+                                    class="value">15-Apr-2024</span></div>
+                            <div class="detail-row"><span class="label">Status</span><span class="value success">✅ On
+                                    track</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2>Maintenance History</h2><button class="btn btn-primary btn-sm" id="addMaintenanceBtn">+ Add
+                        Record</button>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-responsive">
+                        <table class="data-table" id="maintenanceTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Cost</th>
+                                    <th>Details</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>15-Jan-2024</td>
+                                    <td>🔧 Repair</td>
+                                    <td>₹5,000</td>
+                                    <td>Brake system repair</td>
+                                    <td><button class="btn btn-sm btn-outline"
+                                            onclick="showNotification('Coming soon!','info')">View</button></td>
+                                </tr>
+                                <tr>
+                                    <td>05-Jan-2024</td>
+                                    <td>⚙️ Service</td>
+                                    <td>₹8,000</td>
+                                    <td>Full service + oil change</td>
+                                    <td><button class="btn btn-sm btn-outline"
+                                            onclick="showNotification('Coming soon!','info')">View</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ── ADD / EDIT DOCUMENT MODAL ── -->
+    <div class="crm-modal-overlay" id="docModalOverlay">
+        <div class="crm-modal" style="max-width:560px;">
+            <div class="crm-modal-header">
+                <h3 id="docModalTitle">📄 Add Document</h3>
+                <button class="crm-modal-close" id="closeDocModal">✕</button>
+            </div>
+            <div class="crm-modal-body">
+                <form id="docForm" novalidate>
+                    <input type="hidden" id="docEditId">
+                    <div class="form-grid">
+                        <div class="fgrp">
+                            <label>Document Type *</label>
+                            <select id="docType">
+                                <option value="">Select type</option>
+                                <option value="rc">RC Book</option>
+                                <option value="insurance">Insurance</option>
+                                <option value="permit">Permit</option>
+                                <option value="pollution">Pollution Certificate</option>
+                                <option value="fitness">Fitness Certificate</option>
+                                <option value="road_tax">Road Tax</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="fgrp">
+                            <label>Document Number *</label>
+                            <input type="text" id="docNumber" placeholder="e.g. INS123456">
+                        </div>
+                        <div class="fgrp">
+                            <label>Expiry Date *</label>
+                            <input type="date" id="docExpiry">
+                        </div>
+                        <div class="fgrp">
+                            <label>Notes</label>
+                            <input type="text" id="docNotes" placeholder="e.g. Insurance renewed">
+                        </div>
+                        <div class="fgrp full-width">
+                            <label>Document File (PDF / Image)</label>
+                            <div class="file-drop-zone" id="fileDropZone">
+                                <input type="file" id="docFile" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                                <div class="file-icon">📎</div>
+                                <p>Click to upload or drag &amp; drop</p>
+                                <p>PDF, JPG, PNG up to 10 MB</p>
+                                <div class="file-selected-name" id="fileSelectedName" style="display:none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="crm-modal-footer">
+                <button class="btn btn-outline" id="cancelDocModal">Cancel</button>
+                <button class="btn btn-primary" id="saveDocBtn">💾 Save Document</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── DELETE DOC CONFIRM ── -->
+    <div class="crm-modal-overlay" id="deleteDocOverlay">
+        <div class="crm-modal" style="max-width:420px;">
+            <div class="crm-modal-header">
+                <h3>🗑 Delete Document</h3>
+                <button class="crm-modal-close" id="closeDeleteDocModal">✕</button>
+            </div>
+            <div class="crm-modal-body">
+                <p style="color:var(--gray-600);">Delete this document? This cannot be undone.</p>
+            </div>
+            <div class="crm-modal-footer">
+                <button class="btn btn-outline" id="cancelDeleteDocModal">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteDocBtn">🗑 Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── DELETE VEHICLE CONFIRM ── -->
+    <div class="crm-modal-overlay" id="deleteVehicleOverlay">
+        <div class="crm-modal" style="max-width:420px;">
+            <div class="crm-modal-header">
+                <h3>🗑 Delete Vehicle</h3>
+                <button class="crm-modal-close" id="closeDeleteVehicleModal">✕</button>
+            </div>
+            <div class="crm-modal-body">
+                <p style="color:var(--gray-600);">Delete this vehicle and all its data? This cannot be undone.</p>
+            </div>
+            <div class="crm-modal-footer">
+                <button class="btn btn-outline" id="cancelDeleteVehicleModal">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteVehicleBtn">🗑 Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── ADD TRIP MODAL ── -->
+    <div class="crm-modal-overlay" id="tripModalOverlay">
+        <div class="crm-modal">
+            <div class="crm-modal-header">
+                <h3>🗺️ Add Trip</h3><button class="crm-modal-close" id="closeTripModal">✕</button>
+            </div>
+            <div class="crm-modal-body">
+                <div class="form-grid">
+                    <div class="fgrp"><label>From *</label><input type="text" id="tripFrom" placeholder="e.g. Mumbai">
+                    </div>
+                    <div class="fgrp"><label>To *</label><input type="text" id="tripTo" placeholder="e.g. Pune"></div>
+                    <div class="fgrp"><label>Date *</label><input type="date" id="tripDate"></div>
+                    <div class="fgrp"><label>Distance (km)</label><input type="number" id="tripDistance"
+                            placeholder="e.g. 150"></div>
+                    <div class="fgrp"><label>Client Name</label><input type="text" id="tripClient"
+                            placeholder="e.g. ABC Builders"></div>
+                    <div class="fgrp"><label>Freight Amount (₹)</label><input type="number" id="tripAmount"
+                            placeholder="e.g. 30000"></div>
+                </div>
+            </div>
+            <div class="crm-modal-footer">
+                <button class="btn btn-outline" id="cancelTripModal">Cancel</button>
+                <button class="btn btn-primary" id="saveTripBtn">💾 Save Trip</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── ADD MAINTENANCE MODAL ── -->
+    <div class="crm-modal-overlay" id="maintModalOverlay">
+        <div class="crm-modal">
+            <div class="crm-modal-header">
+                <h3>🔧 Add Maintenance</h3><button class="crm-modal-close" id="closeMaintModal">✕</button>
+            </div>
+            <div class="crm-modal-body">
+                <div class="form-grid">
+                    <div class="fgrp"><label>Type *</label>
+                        <select id="maintType">
+                            <option value="">Select</option>
+                            <option>Service</option>
+                            <option>Repair</option>
+                            <option>Tyre Change</option>
+                            <option>Oil Change</option>
+                            <option>Others</option>
+                        </select>
+                    </div>
+                    <div class="fgrp"><label>Cost (₹) *</label><input type="number" id="maintCost"
+                            placeholder="e.g. 8000"></div>
+                    <div class="fgrp"><label>Date *</label><input type="date" id="maintDate"></div>
+                    <div class="fgrp"><label>Odometer (km)</label><input type="number" id="maintOdometer"
+                            placeholder="e.g. 45000"></div>
+                    <div class="fgrp full-width"><label>Details *</label><textarea id="maintDetails" rows="2"
+                            placeholder="e.g. Full service + oil change"></textarea></div>
+                </div>
+            </div>
+            <div class="crm-modal-footer">
+                <button class="btn btn-outline" id="cancelMaintModal">Cancel</button>
+                <button class="btn btn-primary" id="saveMaintBtn">💾 Save Record</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script>
+        $(function () {
+            /* ── Get vehicle ID from URL ── */
+            var vehicleId = new URLSearchParams(window.location.search).get('id');
+            if (!vehicleId) { showNotification('No vehicle ID provided', 'error'); setTimeout(function () { window.location.href = 'vehicles.html'; }, 1500); return; }
+
+            var vehicleData = null;
+            var allDriversList = [];
+            var deleteDocTargetId = null;
+
+            /* ── Modal helpers ── */
+            function openModal(id) { $('#' + id).addClass('open'); $('body').css('overflow', 'hidden'); }
+            function closeModal(id) { $('#' + id).removeClass('open'); $('body').css('overflow', ''); }
+            $('.crm-modal-overlay').on('click', function (e) { if ($(e.target).hasClass('crm-modal-overlay')) closeModal($(this).attr('id')); });
+
+            /* ── Tabs ── */
+            $('.tab-btn').on('click', function () {
+                $('.tab-btn').removeClass('active'); $('.tab-pane').removeClass('active');
+                $(this).addClass('active'); $('#' + $(this).data('tab')).addClass('active');
+                // Load documents when documents tab opened
+                if ($(this).data('tab') === 'documents') loadDocuments();
+            });
+
+            /* ────────────────────────────────────
+               LOAD VEHICLE DETAIL
+            ──────────────────────────────────── */
+            function loadVehicleDetail() {
+                apiRequest(API_ENDPOINTS.VEHICLE_DETAIL.replace('{id}', vehicleId), 'GET', null, true)
+                    .done(function (v) {
+                        vehicleData = v;
+                        renderVehicleHeader(v);
+                        renderVehicleInfo(v);
+                        $('#headerActions').show();
+                        document.title = (v.vehicle_number || 'Vehicle') + ' - LogisticsPro';
+
+                        if (v.driver && v.driver.id) {
+                            // Show skeleton while fetching full driver
+                            $('#driverInfoBody').html(
+                                '<div class="skeleton sk-line wide"></div>'
+                                + '<div class="skeleton sk-line mid"></div>'
+                                + '<div class="skeleton sk-line wide"></div>'
+                                + '<div class="skeleton sk-line short"></div>'
+                            );
+                            apiRequest(API_ENDPOINTS.DRIVER_DETAIL.replace('{id}', v.driver.id), 'GET', null, true)
+                                .done(function (fullDriver) {
+                                    vehicleData.fullDriver = fullDriver;
+                                    renderDriverInfo(fullDriver);
+                                })
+                                .fail(function () {
+                                    // Fallback to partial data from vehicle response
+                                    renderDriverInfo(v.driver);
+                                });
+                        } else {
+                            renderDriverInfo(null);
+                        }
+                    })
+                    .fail(function (xhr) {
+                        if (xhr.status === 401) { handleSessionExpired(); return; }
+                        if (xhr.status === 404) { showNotification('Vehicle not found', 'error'); setTimeout(function () { window.location.href = 'vehicles.html'; }, 1500); return; }
+                        showNotification('Failed to load vehicle details', 'error');
+                    });
+            }
+
+            function renderVehicleHeader(v) {
+                var sc = { active: 'active', idle: 'idle', maintenance: 'maintenance' }[v.status] || 'idle';
+                var sl = v.status ? v.status.charAt(0).toUpperCase() + v.status.slice(1) : 'Unknown';
+                $('#vehicleHeader').html(
+                    '<div class="vehicle-main-info">'
+                    + '<h1>🚛 ' + (v.vehicle_number || '—') + '</h1>'
+                    + '<div class="vehicle-meta">'
+                    + '<span class="meta-item">📍 ' + (v.location || '—') + '</span>'
+                    + '<span class="meta-item">' + (v.vehicle_type || '—') + '</span>'
+                    + '<span class="status-badge ' + sc + '">' + sl + '</span>'
+                    + '</div>'
+                    + '<div class="vehicle-specs">'
+                    + (v.brand ? '<span>Brand: ' + v.brand + '</span>' : '')
+                    + (v.model ? '<span>Model: ' + v.model + '</span>' : '')
+                    + (v.year ? '<span>Year: ' + v.year + '</span>' : '')
+                    + '</div>'
+                    + '</div>'
+                );
+            }
+
+            function renderVehicleInfo(v) {
+                var rows = [
+                    ['Vehicle Number', v.vehicle_number || '—'],
+                    ['Chassis Number', v.chassis_number || '—'],
+                    ['Engine Number', v.engine_number || '—'],
+                    ['Brand', v.brand || '—'],
+                    ['Model', v.model || '—'],
+                    ['Year', v.year || '—'],
+                    ['Type', v.vehicle_type || '—'],
+                    ['Location', '📍 ' + (v.location || '—')],
+                    ['Purchase Date', v.purchase_date ? formatDate(v.purchase_date) : '—'],
+                    ['Purchase Price', v.purchase_price ? '₹' + Number(v.purchase_price).toLocaleString('en-IN') : '—'],
+                ];
+                $('#vehicleInfoBody').html(rows.map(function (r) { return detailRow(r[0], r[1]); }).join(''));
+            }
+
+            function renderDriverInfo(d) {
+                if (!d || !d.id) {
+                    $('#driverInfoBody').html(
+                        '<div style="text-align:center;padding:2rem;color:var(--gray-400);">'
+                        + '<div style="font-size:2.5rem;margin-bottom:.75rem;">👤</div>'
+                        + '<p style="font-weight:500;color:var(--gray-600);">No Driver Assigned</p>'
+                        + '<p style="font-size:.8125rem;margin-top:.375rem;">Use "Change Driver" to assign one.</p>'
+                        + '</div>'
+                    );
+                    return;
+                }
+
+                var statusColor = d.status === 'active' ? 'var(--success)' : 'var(--warning)';
+                var statusLabel = d.status ? d.status.charAt(0).toUpperCase() + d.status.slice(1) : '—';
+
+                var rows = [
+                    ['📞 Phone', d.phone || '—'],
+                    ['🪪 License No.', d.license_number || '—'],
+                    ['📅 License Expiry', d.license_expiry ? formatDate(d.license_expiry) : '—'],
+                    ['💰 Salary', d.salary ? '₹' + Number(d.salary).toLocaleString('en-IN') + '/month' : '—'],
+                    ['📆 Joining Date', d.joining_date ? formatDate(d.joining_date) : '—'],
+                    ['🚛 Assigned Vehicle', d.assigned_vehicle_number || '—'],
+                    ['🏦 Account No.', d.account_number || '—'],
+                    ['🏷️ IFSC Code', d.ifsc_code || '—'],
+                    ['📝 Notes', d.notes || '—'],
+                ];
+
+                $('#driverInfoBody').html(
+                    // Profile header
+                    '<div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border);">'
+                    + '<div style="width:52px;height:52px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:1.75rem;flex-shrink:0;">👤</div>'
+                    + '<div>'
+                    + '<h3 style="margin:0 0 .2rem;font-size:1rem;font-weight:600;">' + (d.name || '—') + '</h3>'
+                    + '<span style="font-size:.75rem;font-weight:500;color:' + statusColor + ';">● ' + statusLabel + '</span>'
+                    + '</div>'
+                    + '</div>'
+                    // Scrollable rows
+                    + '<div style="max-height:320px;overflow-y:auto;padding-right:.25rem;">'
+                    + rows.map(function (r) { return detailRow(r[0], r[1]); }).join('')
+                    + '</div>'
+                );
+            }
+            /* ────────────────────────────────────
+               CHANGE DRIVER DROPDOWN
+            ──────────────────────────────────── */
+            // Load all drivers for dropdown
+            function loadDriversForDropdown() {
+                apiRequest(API_ENDPOINTS.DRIVERS, 'GET', null, true)
+                    .done(function (res) {
+                        allDriversList = Array.isArray(res) ? res : (res.results || []);
+                        renderDriverOptions();
+                    })
+                    .fail(function () {
+                        $('#driverOptionsList').html('<div style="padding:.75rem 1rem;font-size:.875rem;color:var(--danger);">Failed to load drivers</div>');
+                    });
+            }
+
+            function renderDriverOptions() {
+                if (!allDriversList.length) {
+                    $('#driverOptionsList').html('<div style="padding:.75rem 1rem;font-size:.875rem;color:var(--gray-500);">No drivers registered. <a href="drivers.html">Add drivers</a></div>');
+                    return;
+                }
+                var currentDriverId = vehicleData && vehicleData.driver ? vehicleData.driver.id : null; var html = allDriversList.map(function (d) {
+                    var isActive = currentDriverId && d.id == currentDriverId;
+                    return '<div class="driver-option' + (isActive ? ' active' : '') + '" data-driver-id="' + d.id + '">'
+                        + '<div class="driver-opt-avatar">👤</div>'
+                        + '<div class="driver-opt-info">'
+                        + '<div class="driver-opt-name">' + (d.name || '—') + (isActive ? ' ✓' : '') + '</div>'
+                        + '<div class="driver-opt-phone">' + (d.phone || '') + '</div>'
+                        + '</div></div>';
+                }).join('');
+                $('#driverOptionsList').html(html);
+            }
+
+            // Toggle dropdown
+            $('#changeDriverBtn').on('click', function (e) {
+                e.stopPropagation();
+                var menu = $('#driverDropdownMenu');
+                if (!menu.hasClass('open')) {
+                    // load drivers fresh when opened
+                    loadDriversForDropdown();
+                }
+                menu.toggleClass('open');
+            });
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('.driver-change-wrap').length) $('#driverDropdownMenu').removeClass('open');
+            });
+
+            // Select a driver
+            $(document).on('click', '.driver-option:not(.unassign)', function () {
+                var driverId = $(this).data('driver-id');
+                if (!driverId) return;
+                assignDriver(driverId);
+            });
+
+            // Unassign driver
+            $('#unassignDriverBtn').on('click', function () {
+                if (!vehicleData || !vehicleData.current_driver) { showNotification('No driver assigned', 'info'); return; }
+                assignDriver(null);
+            });
+            function assignDriver(driverId) {
+                $('#driverDropdownMenu').removeClass('open');
+                var btn = $('#changeDriverBtn');
+                btn.text('Saving…').prop('disabled', true);
+
+                apiRequest(API_ENDPOINTS.VEHICLE_DETAIL.replace('{id}', vehicleId), 'PATCH', { current_driver: driverId }, true)
+                    .done(function () {
+                        btn.text('🔄 Change Driver ▾').prop('disabled', false);
+
+                        if (!driverId) {
+                            vehicleData.driver = null;
+                            vehicleData.fullDriver = null;
+                            renderDriverInfo(null);
+                            renderDriverOptions();
+                            showNotification('Driver removed.', 'success');
+                            return;
+                        }
+
+                        // Fetch full driver details by ID
+                        apiRequest(API_ENDPOINTS.DRIVER_DETAIL.replace('{id}', driverId), 'GET', null, true)
+                            .done(function (fullDriver) {
+                                vehicleData.driver = { id: fullDriver.id, name: fullDriver.name };
+                                vehicleData.fullDriver = fullDriver;
+                                renderDriverInfo(fullDriver);
+                                renderDriverOptions();
+                                showNotification('Driver assigned successfully!', 'success');
+                            })
+                            .fail(function () {
+                                showNotification('Assigned! Refresh to see driver details.', 'warning');
+                            });
+                    })
+                    .fail(function (xhr) {
+                        btn.text('🔄 Change Driver ▾').prop('disabled', false);
+                        if (xhr.status === 401) { handleSessionExpired(); return; }
+                        showNotification('Failed to update driver.', 'error');
+                    });
+            }
+
+
+
+
+            /* ────────────────────────────────────
+               DOCUMENTS — dynamic
+            ──────────────────────────────────── */
+            var documentsLoaded = false;
+
+            function loadDocuments() {
+                if (documentsLoaded) return; // skip if already loaded unless refresh forced
+                $('#docsTableWrap').html('<div style="padding:2rem;text-align:center;color:var(--gray-400);"><div class="skeleton sk-line wide" style="max-width:400px;margin:0 auto 8px;"></div><div class="skeleton sk-line mid" style="max-width:300px;margin:0 auto 8px;"></div><div class="skeleton sk-line wide" style="max-width:400px;margin:0 auto;"></div></div>');
+
+                apiRequest(API_ENDPOINTS.VEHICLE_DOCS + '?vehicle=' + vehicleId, 'GET', null, true)
+                    .done(function (res) {
+                        var docs = Array.isArray(res) ? res : (res.results || []);
+                        documentsLoaded = true;
+                        renderDocumentsTable(docs);
+                    })
+                    .fail(function (xhr) {
+                        if (xhr.status === 401) { handleSessionExpired(); return; }
+                        $('#docsTableWrap').html('<div style="padding:2rem;text-align:center;color:var(--danger);">⚠️ Failed to load documents. <button class="btn btn-sm btn-outline" onclick="forceReloadDocs()">Retry</button></div>');
+                    });
+            }
+
+            window.forceReloadDocs = function () { documentsLoaded = false; loadDocuments(); };
+
+            function docTypeName(t) {
+                var map = { rc: 'RC Book', insurance: 'Insurance', permit: 'Permit', pollution: 'Pollution Cert.', fitness: 'Fitness Cert.', road_tax: 'Road Tax', other: 'Other' };
+                return map[t] || (t ? t.replace(/_/g, ' ') : '—');
+            }
+            function docTypIcon(t) {
+                var map = { rc: '📄', insurance: '🛡️', permit: '📋', pollution: '🌿', fitness: '✔️', road_tax: '🧾', other: '📁' };
+                return map[t] || '📄';
+            }
+
+            function renderDocumentsTable(docs) {
+                if (!docs.length) {
+                    $('#docsTableWrap').html('<div style="padding:3rem;text-align:center;color:var(--gray-400);"><div style="font-size:2.5rem;margin-bottom:.75rem;">📄</div><p style="font-weight:500;color:var(--gray-600);">No documents added yet</p><p style="font-size:.8125rem;margin-top:.375rem;">Click "+ Add Document" to upload.</p></div>');
+                    return;
+                }
+                var today = new Date(); today.setHours(0, 0, 0, 0);
+                var rows = docs.map(function (d) {
+                    var expiry = d.expiry_date ? new Date(d.expiry_date) : null;
+                    var daysLeft = expiry ? Math.ceil((expiry - today) / 86400000) : null;
+                    var badge = '';
+                    if (daysLeft !== null) {
+                        if (daysLeft < 0) badge = '<span class="badge danger">🔴 Expired</span>';
+                        else if (daysLeft <= 30) badge = '<span class="badge warning">⚠️ ' + daysLeft + ' days</span>';
+                        else badge = '<span class="badge success">✅ Valid</span>';
+                    }
+                    var fileLink = d.file
+                        ? '<a href="' + d.file + '" target="_blank" class="btn btn-sm btn-outline">📥 View</a>'
+                        : '<span style="font-size:.8125rem;color:var(--gray-400);">No file</span>';
+                    return '<tr>'
+                        + '<td>' + docTypIcon(d.document_type) + ' ' + docTypeName(d.document_type) + '</td>'
+                        + '<td>' + (d.document_number || '—') + '</td>'
+                        + '<td>' + (d.expiry_date ? formatDate(d.expiry_date) : '—') + '</td>'
+                        + '<td>' + badge + '</td>'
+                        + '<td>' + (d.notes || '—') + '</td>'
+                        + '<td style="white-space:nowrap;">'
+                        + fileLink
+                        + ' <button class="btn btn-sm btn-outline edit-doc-btn" data-id="' + d.id + '">✏️</button>'
+                        + ' <button class="btn btn-sm btn-danger delete-doc-btn" data-id="' + d.id + '">🗑</button>'
+                        + '</td>'
+                        + '</tr>';
+                }).join('');
+                $('#docsTableWrap').html(
+                    '<div class="table-responsive">'
+                    + '<table class="data-table">'
+                    + '<thead><tr><th>Type</th><th>Document No.</th><th>Expiry</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead>'
+                    + '<tbody>' + rows + '</tbody>'
+                    + '</table>'
+                    + '</div>'
+                );
+            }
+
+            /* ── Add Document ── */
+            $('#addDocumentBtn').on('click', function () {
+                $('#docModalTitle').text('📄 Add Document');
+                $('#docForm')[0].reset();
+                $('#docEditId').val('');
+                $('#fileSelectedName').hide().text('');
+                openModal('docModalOverlay');
+            });
+            $('#closeDocModal,#cancelDocModal').on('click', function () { closeModal('docModalOverlay'); });
+
+            /* ── Edit Document ── */
+            $(document).on('click', '.edit-doc-btn', function () {
+                var id = $(this).data('id');
+                // Fetch doc detail
+                apiRequest(API_ENDPOINTS.VEHICLE_DOC_DETAIL.replace('{id}', id), 'GET', null, true)
+                    .done(function (d) {
+                        $('#docModalTitle').text('✏️ Edit Document');
+                        $('#docEditId').val(d.id);
+                        $('#docType').val(d.document_type || '');
+                        $('#docNumber').val(d.document_number || '');
+                        $('#docExpiry').val(d.expiry_date || '');
+                        $('#docNotes').val(d.notes || '');
+                        $('#fileSelectedName').text(d.file ? 'Current file uploaded' : 'No file uploaded').show();
+                        openModal('docModalOverlay');
+                    })
+                    .fail(function () { showNotification('Failed to load document', 'error'); });
+            });
+
+            /* ── File input ── */
+            $('#fileDropZone').on('click', function () { $('#docFile').trigger('click'); });
+            $('#fileDropZone').on('dragover', function (e) { e.preventDefault(); $(this).addClass('dragover'); });
+            $('#fileDropZone').on('dragleave', function () { $(this).removeClass('dragover'); });
+            $('#fileDropZone').on('drop', function (e) {
+                e.preventDefault(); $(this).removeClass('dragover');
+                var file = e.originalEvent.dataTransfer.files[0];
+                if (file) { $('#docFile')[0].files = e.originalEvent.dataTransfer.files; showFileName(file.name); }
+            });
+            $('#docFile').on('change', function () {
+                if (this.files[0]) showFileName(this.files[0].name);
+            });
+            function showFileName(name) { $('#fileSelectedName').text('📎 ' + name).show(); }
+
+            /* ── Save Document ── */
+            $('#saveDocBtn').on('click', function () {
+                var type = $('#docType').val(), number = $('#docNumber').val().trim(), expiry = $('#docExpiry').val();
+                if (!type) { showNotification('Document type is required', 'error'); $('#docType').focus(); return; }
+                if (!number) { showNotification('Document number is required', 'error'); $('#docNumber').focus(); return; }
+                if (!expiry) { showNotification('Expiry date is required', 'error'); $('#docExpiry').focus(); return; }
+
+                var fd = new FormData();
+                fd.append('vehicle', vehicleId);
+                fd.append('document_type', type);
+                fd.append('document_number', number);
+                fd.append('expiry_date', expiry);
+                if ($('#docNotes').val().trim()) fd.append('notes', $('#docNotes').val().trim());
+                var fileInput = $('#docFile')[0];
+                if (fileInput.files && fileInput.files[0]) fd.append('file', fileInput.files[0]);
+
+                var editId = $('#docEditId').val(), isEdit = !!editId;
+                var btn = $(this); btn.text('Saving…').prop('disabled', true);
+
+                var endpoint = isEdit ? API_ENDPOINTS.VEHICLE_DOC_DETAIL.replace('{id}', editId) : API_ENDPOINTS.VEHICLE_DOCS;
+                var method = isEdit ? 'PUT' : 'POST';
+
+                apiRequestFormData(endpoint, method, fd, true)
+                    .done(function () {
+                        btn.text('💾 Save Document').prop('disabled', false);
+                        showNotification(isEdit ? 'Document updated!' : 'Document added!', 'success');
+                        closeModal('docModalOverlay');
+                        documentsLoaded = false;
+                        loadDocuments();
+                    })
+                    .fail(function (xhr) {
+                        btn.text('💾 Save Document').prop('disabled', false);
+                        if (xhr.status === 401) { handleSessionExpired(); return; }
+                        var err = xhr.responseJSON, msg = 'Failed to save document.';
+                        if (err) { var first = Object.values(err)[0]; msg = Array.isArray(first) ? first[0] : first || msg; }
+                        showNotification(msg, 'error');
+                    });
+            });
+
+            /* ── Delete Document ── */
+            $(document).on('click', '.delete-doc-btn', function () {
+                deleteDocTargetId = $(this).data('id');
+                openModal('deleteDocOverlay');
+            });
+            $('#confirmDeleteDocBtn').on('click', function () {
+                if (!deleteDocTargetId) return;
+                var btn = $(this); btn.text('Deleting…').prop('disabled', true);
+                apiRequest(API_ENDPOINTS.VEHICLE_DOC_DETAIL.replace('{id}', deleteDocTargetId), 'DELETE', null, true)
+                    .done(function () {
+                        btn.text('🗑 Yes, Delete').prop('disabled', false);
+                        showNotification('Document deleted!', 'success');
+                        closeModal('deleteDocOverlay');
+                        documentsLoaded = false;
+                        loadDocuments();
+                        deleteDocTargetId = null;
+                    })
+                    .fail(function (xhr) {
+                        btn.text('🗑 Yes, Delete').prop('disabled', false);
+                        if (xhr.status === 401) { handleSessionExpired(); return; }
+                        showNotification('Failed to delete document.', 'error');
+                    });
+            });
+            $('#closeDeleteDocModal,#cancelDeleteDocModal').on('click', function () { closeModal('deleteDocOverlay'); });
+
+            /* ────────────────────────────────────
+               EDIT & DELETE VEHICLE
+            ──────────────────────────────────── */
+            $('#editVehicleBtn').on('click', function () {
+                showNotification('Edit vehicle from Vehicles page', 'info');
+                setTimeout(function () { window.location.href = 'vehicles.html'; }, 1000);
+            });
+            $('#deleteVehicleBtn').on('click', function () { openModal('deleteVehicleOverlay'); });
+            $('#confirmDeleteVehicleBtn').on('click', function () {
+                var btn = $(this); btn.text('Deleting…').prop('disabled', true);
+                apiRequest(API_ENDPOINTS.VEHICLE_DETAIL.replace('{id}', vehicleId), 'DELETE', null, true)
+                    .done(function () {
+                        showNotification('Vehicle deleted!', 'success');
+                        setTimeout(function () { window.location.href = 'vehicles.html'; }, 800);
+                    })
+                    .fail(function (xhr) {
+                        btn.text('🗑 Yes, Delete').prop('disabled', false);
+                        if (xhr.status === 401) { handleSessionExpired(); return; }
+                        showNotification('Failed to delete vehicle.', 'error');
+                    });
+            });
+            $('#closeDeleteVehicleModal,#cancelDeleteVehicleModal').on('click', function () { closeModal('deleteVehicleOverlay'); });
+
+            /* ────────────────────────────────────
+               STATIC TRIP & MAINTENANCE FORMS
+            ──────────────────────────────────── */
+            var today = new Date().toISOString().split('T')[0];
+            $('#tripDate,#maintDate').val(today);
+
+            $('#addTripBtn').on('click', function () { openModal('tripModalOverlay'); });
+            $('#closeTripModal,#cancelTripModal').on('click', function () { closeModal('tripModalOverlay'); });
+            $('#saveTripBtn').on('click', function () {
+                var from = $('#tripFrom').val().trim(), to = $('#tripTo').val().trim(), date = $('#tripDate').val();
+                if (!from || !to || !date) { showNotification('Fill all required fields', 'error'); return; }
+                var tid = 'TRP' + Math.floor(Math.random() * 900 + 100);
+                $('#tripsTable tbody').prepend('<tr><td>' + tid + '</td><td>' + date + '</td><td>' + from + '</td><td>' + to + '</td><td>' + ($('#tripDistance').val() || '—') + ' km</td><td>' + ($('#tripClient').val() || '—') + '</td><td><span class="badge warning">🔄 In Progress</span></td><td><button class="btn btn-sm btn-outline" onclick="showNotification(\'View coming soon!\',\'info\')">View</button></td></tr>');
+                showNotification('Trip added!', 'success');
+                closeModal('tripModalOverlay');
+            });
+
+            $('#addMaintenanceBtn').on('click', function () { openModal('maintModalOverlay'); });
+            $('#closeMaintModal,#cancelMaintModal').on('click', function () { closeModal('maintModalOverlay'); });
+            $('#saveMaintBtn').on('click', function () {
+                var type = $('#maintType').val(), cost = $('#maintCost').val(), date = $('#maintDate').val(), details = $('#maintDetails').val().trim();
+                if (!type || !cost || !date || !details) { showNotification('Fill all required fields', 'error'); return; }
+                $('#maintenanceTable tbody').prepend('<tr><td>' + date + '</td><td>🔧 ' + type + '</td><td>₹' + Number(cost).toLocaleString('en-IN') + '</td><td>' + details + '</td><td><button class="btn btn-sm btn-outline" onclick="showNotification(\'View coming soon!\',\'info\')">View</button></td></tr>');
+                showNotification('Maintenance record added!', 'success');
+                closeModal('maintModalOverlay');
+            });
+
+            /* ── Add Expense (static) ── */
+            $('#addExpenseBtn').on('click', function () { showNotification('Add expense — connect expenses API', 'info'); });
+
+            /* ────────────────────────────────────
+               HELPERS
+            ──────────────────────────────────── */
+            function detailRow(label, value) {
+                return '<div class="detail-row"><span class="label">' + label + '</span><span class="value">' + value + '</span></div>';
+            }
+            function formatDate(d) {
+                if (!d) return '—';
+                return new Date(d).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+            }
+
+            /* ── INIT ── */
+            loadVehicleDetail();
+        });
+    </script>
+</body>
+
+</html>

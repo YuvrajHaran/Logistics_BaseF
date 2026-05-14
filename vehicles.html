@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Vehicles - LogisticsPro</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .crm-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .55);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .crm-modal-overlay.open {
+            display: flex;
+        }
+
+        @media(max-width:600px) {
+            .crm-modal-overlay {
+                align-items: flex-end;
+                padding: 0;
+            }
+
+            .crm-modal {
+                border-radius: 1rem 1rem 0 0;
+                max-height: 92vh;
+            }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-50) 50%, var(--gray-100) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: var(--radius-lg);
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0
+            }
+
+            100% {
+                background-position: -200% 0
+            }
+        }
+
+        .skeleton-card {
+            height: 240px;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="assets/js/layout.js"></script>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>🚛 Vehicles</h1>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                <button class="btn btn-outline" onclick="window.location.href='drivers.html'">👥 Drivers</button>
+                <button class="btn btn-primary" id="addVehicleBtn">+ Add Vehicle</button>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <div class="search-box">
+                <input type="text" id="searchVehicle" placeholder="Search by number plate…">
+            </div>
+            <div class="filter-group">
+                <select class="filter-select" id="filterStatus">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="idle">Idle</option>
+                    <option value="maintenance">Maintenance</option>
+                </select>
+                <button class="btn btn-outline btn-sm" id="refreshBtn" title="Refresh">🔄</button>
+            </div>
+        </div>
+
+        <div class="vehicles-grid" id="vehiclesGrid">
+            <div class="skeleton skeleton-card"></div>
+            <div class="skeleton skeleton-card"></div>
+            <div class="skeleton skeleton-card"></div>
+            <div class="skeleton skeleton-card"></div>
+        </div>
+
+        <div class="pagination" id="paginationBar" style="display:none;">
+            <p id="paginationInfo">Showing 0 vehicles</p>
+        </div>
+    </main>
+
+    <!-- Add / Edit Vehicle Modal -->
+    <div class="crm-modal-overlay" id="vehicleModalOverlay">
+        <div class="crm-modal">
+            <div class="crm-modal-header">
+                <h3 id="vehicleModalTitle">+ Add Vehicle</h3>
+                <button class="crm-modal-close" id="closeVehicleModal">✕</button>
+            </div>
+            <div class="crm-modal-body">
+                <form id="vehicleForm" novalidate>
+                    <input type="hidden" id="vehicleEditId">
+                    <div class="form-grid">
+                        <div class="fgrp"><label>Vehicle Number *</label><input type="text" id="vNumber"
+                                placeholder="e.g. MH01AB1234"></div>
+                        <div class="fgrp"><label>Vehicle Type *</label>
+                            <select id="vType">
+                                <option value="">Select type</option>
+                                <option>Concrete Mixer</option>
+                                <option>Tipper</option>
+                                <option>Truck</option>
+                                <option>Tanker</option>
+                                <option>Container</option>
+                                <option>Trailer</option>
+                            </select>
+                        </div>
+                        <div class="fgrp"><label>Brand</label><input type="text" id="vBrand" placeholder="e.g. Tata">
+                        </div>
+                        <div class="fgrp"><label>Model</label><input type="text" id="vModel" placeholder="e.g. 407">
+                        </div>
+                        <div class="fgrp"><label>Year</label><input type="number" id="vYear" placeholder="2021"
+                                min="2000" max="2035"></div>
+                        <div class="fgrp"><label>Location *</label><input type="text" id="vLocation"
+                                placeholder="e.g. Mumbai"></div>
+                        <div class="fgrp"><label>Status</label>
+                            <select id="vStatus">
+                                <option value="active">Active</option>
+                                <option value="idle">Idle</option>
+                                <option value="maintenance">Maintenance</option>
+                            </select>
+                        </div>
+                        <div class="fgrp"><label>Purchase Price (₹)</label><input type="number" id="vPrice"
+                                placeholder="e.g. 2500000"></div>
+                        <div class="fgrp"><label>Purchase Date</label><input type="date" id="vPurchaseDate"></div>
+                        <div class="fgrp"><label>Chassis Number</label><input type="text" id="vChassis"
+                                placeholder="e.g. CH123456789"></div>
+                        <div class="fgrp full-width"><label>Engine Number</label><input type="text" id="vEngine"
+                                placeholder="e.g. EN123456789"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="crm-modal-footer">
+                <button class="btn btn-outline" id="cancelVehicleModal">Cancel</button>
+                <button class="btn btn-primary" id="saveVehicleBtn">💾 Save Vehicle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirm -->
+    <div class="crm-modal-overlay" id="deleteVehicleOverlay">
+        <div class="crm-modal" style="max-width:420px">
+            <div class="crm-modal-header">
+                <h3>🗑 Delete Vehicle</h3>
+                <button class="crm-modal-close" id="closeDeleteModal">✕</button>
+            </div>
+            <div class="crm-modal-body">
+                <p style="color:var(--gray-600)">Delete vehicle <strong id="deleteVehicleNum"></strong>? This cannot be
+                    undone.</p>
+            </div>
+            <div class="crm-modal-footer">
+                <button class="btn btn-outline" id="cancelDeleteModal">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">🗑 Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/vehicles.js"></script>
+
+</body>
+
+</html>
