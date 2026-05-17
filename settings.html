@@ -1,232 +1,446 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Settings - LogisticsPro</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
+
 <body>
-<script src="assets/js/layout.js"></script>
+    <script src="assets/js/layout.js"></script>
 
-<main class="main-content">
-    <div class="page-header"><h1>⚙️ Settings</h1></div>
-
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="company">🏢 Company</button>
-        <button class="tab-btn" data-tab="users">👥 Users</button>
-        <button class="tab-btn" data-tab="notif-settings">🔔 Alerts</button>
-        <button class="tab-btn" data-tab="categories">📋 Categories</button>
-    </div>
-
-    <!-- Company Tab -->
-    <div class="tab-pane active" id="company">
-        <div class="card">
-            <div class="card-header"><h2>Company Information</h2></div>
-            <div class="card-body">
-                <form id="companyForm">
-                    <div class="form-grid">
-                        <div class="fgrp"><label>Company Name</label><input type="text" value="Janai Enterprises" class="form-input"></div>
-                        <div class="fgrp"><label>Phone Number</label><input type="tel" value="+91 98765 43210" class="form-input"></div>
-                        <div class="fgrp"><label>Email Address</label><input type="email" value="info@janai.com" class="form-input"></div>
-                        <div class="fgrp"><label>Website</label><input type="url" value="www.janai.com" class="form-input"></div>
-                        <div class="fgrp full-width"><label>Address</label><textarea class="form-input" rows="2">123, Business Hub, Andheri East, Mumbai</textarea></div>
-                        <div class="fgrp"><label>City</label><input type="text" value="Mumbai" class="form-input"></div>
-                        <div class="fgrp"><label>State</label><input type="text" value="Maharashtra" class="form-input"></div>
-                        <div class="fgrp"><label>PIN Code</label><input type="text" value="400069" class="form-input"></div>
-                        <div class="fgrp"><label>GSTIN</label><input type="text" value="27XXXXX1234X1ZX" class="form-input"></div>
-                        <div class="fgrp"><label>PAN Number</label><input type="text" value="XXXXX1234X" class="form-input"></div>
-                        <div class="fgrp full-width">
-                            <label>Company Logo</label>
-                            <div class="file-upload">
-                                <input type="file" id="logoUpload" accept="image/*">
-                                <label for="logoUpload" class="file-upload-label">📁 Choose Logo File</label>
-                                <span class="file-name">logo.png (Current)</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">💾 Save Changes</button>
-                        <button type="reset" class="btn btn-outline">↩️ Reset</button>
-                    </div>
-                </form>
-            </div>
+    <main class="main-content">
+        <div class="page-header">
+            <h1>⚙️ Settings</h1>
         </div>
-    </div>
 
-    <!-- Users Tab -->
-    <div class="tab-pane" id="users">
-        <div class="card">
-            <div class="card-header">
-                <h2>Users &amp; Permissions</h2>
-                <button class="btn btn-primary btn-sm" id="addUserBtn">+ Add User</button>
-            </div>
-            <div class="card-body" style="padding:0">
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>👤 Admin User</td><td>admin@janai.com</td>
-                                <td><span class="badge info">Admin</span></td>
-                                <td><span class="badge success">Active</span></td>
-                                <td>Today, 9:30 AM</td>
-                                <td><button class="btn btn-sm btn-outline" onclick="showNotification('Edit user coming soon!','info')">Edit</button></td>
-                            </tr>
-                            <tr>
-                                <td>👤 Fleet Manager</td><td>manager@janai.com</td>
-                                <td><span class="badge warning">Manager</span></td>
-                                <td><span class="badge success">Active</span></td>
-                                <td>Yesterday, 6:15 PM</td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline" onclick="showNotification('Edit user coming soon!','info')">Edit</button>
-                                    <button class="btn btn-sm btn-danger" onclick="showNotification('Delete user coming soon!','info')">Delete</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>👤 Accountant</td><td>accounts@janai.com</td>
-                                <td><span class="badge secondary">Staff</span></td>
-                                <td><span class="badge success">Active</span></td>
-                                <td>2 days ago</td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline" onclick="showNotification('Edit user coming soon!','info')">Edit</button>
-                                    <button class="btn btn-sm btn-danger" onclick="showNotification('Delete user coming soon!','info')">Delete</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="company">🏢 Company</button>
+            <button class="tab-btn" data-tab="users">👥 Users</button>
+            <button class="tab-btn" data-tab="notif-settings">🔔 Alerts</button>
+            <button class="tab-btn" data-tab="categories">📋 Categories</button>
         </div>
-    </div>
 
-    <!-- Notification Settings Tab -->
-    <div class="tab-pane" id="notif-settings">
-        <div class="card">
-            <div class="card-header"><h2>Notification Preferences</h2></div>
-            <div class="card-body">
-                <form id="notifSettingsForm">
-                    <div class="settings-section">
-                        <h3>📧 Email Notifications</h3>
-                        <div class="settings-list">
-                            <div class="setting-item">
-                                <div class="setting-info"><h4>EMI Due Reminder</h4><p>Get notified before EMI due date</p></div>
-                                <div class="setting-controls">
-                                    <select class="filter-select"><option>5 days before</option><option>3 days before</option><option>1 day before</option></select>
-                                    <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-                                </div>
-                            </div>
-                            <div class="setting-item">
-                                <div class="setting-info"><h4>Document Expiry Alert</h4><p>Reminder for RC, Insurance, Permit, etc.</p></div>
-                                <div class="setting-controls">
-                                    <select class="filter-select"><option>30 days before</option><option>15 days before</option><option>7 days before</option></select>
-                                    <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-                                </div>
-                            </div>
-                            <div class="setting-item">
-                                <div class="setting-info"><h4>Tyre Change Alert</h4><p>Get notified when tyre change is needed</p></div>
-                                <div class="setting-controls">
-                                    <select class="filter-select"><option>5,000 km before</option><option>3,000 km before</option><option>1,000 km before</option></select>
-                                    <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-                                </div>
-                            </div>
-                            <div class="setting-item">
-                                <div class="setting-info"><h4>Service Due Reminder</h4><p>Vehicle servicing reminder</p></div>
-                                <div class="setting-controls">
-                                    <select class="filter-select"><option>7 days before</option><option>3 days before</option><option>1 day before</option></select>
-                                    <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-                                </div>
-                            </div>
-                            <div class="setting-item">
-                                <div class="setting-info"><h4>GST Payment Reminder</h4><p>Monthly GST payment reminder</p></div>
-                                <div class="setting-controls">
-                                    <select class="filter-select"><option>10 days before</option><option>5 days before</option></select>
-                                    <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="settings-section">
-                        <h3>📱 SMS Notifications</h3>
-                        <div class="settings-list">
-                            <div class="setting-item">
-                                <div class="setting-info"><h4>EMI Due (Same Day)</h4><p>SMS on EMI due date</p></div>
-                                <div class="setting-controls"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
-                            </div>
-                            <div class="setting-item">
-                                <div class="setting-info"><h4>Document Expiry Urgent</h4><p>SMS when document expires in 7 days</p></div>
-                                <div class="setting-controls"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">💾 Save Preferences</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Categories Tab -->
-    <div class="tab-pane" id="categories">
-        <div class="categories-grid">
+        <!-- Company Tab -->
+        <div class="tab-pane active" id="company">
             <div class="card">
                 <div class="card-header">
-                    <h2>💰 Expense Categories</h2>
-                    <button class="btn btn-sm btn-primary" onclick="showNotification('Add category coming soon!','info')">+ Add</button>
+                    <h2>Company Information</h2>
                 </div>
                 <div class="card-body">
-                    <div class="category-list">
-                        <div class="category-item"><span>⛽ Fuel</span><div><button class="btn btn-sm btn-outline" onclick="showNotification('Edit coming soon!','info')">Edit</button> <button class="btn btn-sm btn-danger" onclick="showNotification('Delete coming soon!','info')">Del</button></div></div>
-                        <div class="category-item"><span>💰 EMI / Finance</span><div><button class="btn btn-sm btn-outline" onclick="showNotification('Edit coming soon!','info')">Edit</button> <button class="btn btn-sm btn-danger" onclick="showNotification('Delete coming soon!','info')">Del</button></div></div>
-                        <div class="category-item"><span>⚙️ Servicing</span><div><button class="btn btn-sm btn-outline" onclick="showNotification('Edit coming soon!','info')">Edit</button> <button class="btn btn-sm btn-danger" onclick="showNotification('Delete coming soon!','info')">Del</button></div></div>
-                        <div class="category-item"><span>🔧 Repair</span><div><button class="btn btn-sm btn-outline" onclick="showNotification('Edit coming soon!','info')">Edit</button> <button class="btn btn-sm btn-danger" onclick="showNotification('Delete coming soon!','info')">Del</button></div></div>
-                        <div class="category-item"><span>🛞 Tyres</span><div><button class="btn btn-sm btn-outline" onclick="showNotification('Edit coming soon!','info')">Edit</button> <button class="btn btn-sm btn-danger" onclick="showNotification('Delete coming soon!','info')">Del</button></div></div>
-                        <div class="category-item"><span>👥 Salaries</span><div><button class="btn btn-sm btn-outline" onclick="showNotification('Edit coming soon!','info')">Edit</button> <button class="btn btn-sm btn-danger" onclick="showNotification('Delete coming soon!','info')">Del</button></div></div>
-                    </div>
+                    <form id="companyForm">
+                        <div class="form-grid">
+                            <div class="fgrp"><label>Company Name</label><input type="text" value="Janai Enterprises"
+                                    class="form-input"></div>
+                            <div class="fgrp"><label>Phone Number</label><input type="tel" value="+91 98765 43210"
+                                    class="form-input"></div>
+                            <div class="fgrp"><label>Email Address</label><input type="email" value="info@janai.com"
+                                    class="form-input"></div>
+                            <div class="fgrp"><label>Website</label><input type="url" value="www.janai.com"
+                                    class="form-input"></div>
+                            <div class="fgrp full-width"><label>Address</label><textarea class="form-input"
+                                    rows="2">123, Business Hub, Andheri East, Mumbai</textarea></div>
+                            <div class="fgrp"><label>City</label><input type="text" value="Mumbai" class="form-input">
+                            </div>
+                            <div class="fgrp"><label>State</label><input type="text" value="Maharashtra"
+                                    class="form-input"></div>
+                            <div class="fgrp"><label>PIN Code</label><input type="text" value="400069"
+                                    class="form-input"></div>
+                            <div class="fgrp"><label>GSTIN</label><input type="text" value="27XXXXX1234X1ZX"
+                                    class="form-input"></div>
+                            <div class="fgrp"><label>PAN Number</label><input type="text" value="XXXXX1234X"
+                                    class="form-input"></div>
+                            <div class="fgrp full-width">
+                                <label>Company Logo</label>
+                                <div class="file-upload">
+                                    <input type="file" id="logoUpload" accept="image/*">
+                                    <label for="logoUpload" class="file-upload-label">📁 Choose Logo File</label>
+                                    <span class="file-name">logo.png (Current)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+                            <button type="reset" class="btn btn-outline">↩️ Reset</button>
+                        </div>
+                    </form>
                 </div>
             </div>
+        </div>
+
+        <!-- Users Tab -->
+        <div class="tab-pane" id="users">
             <div class="card">
                 <div class="card-header">
-                    <h2>📄 Document Types</h2>
-                    <button class="btn btn-sm btn-primary" onclick="showNotification('Add document type coming soon!','info')">+ Add</button>
+                    <h2>Users &amp; Permissions</h2>
+                    <button class="btn btn-primary btn-sm" id="addUserBtn">+ Add User</button>
                 </div>
-                <div class="card-body">
-                    <div class="category-list">
-                        <div class="category-item"><span>📄 RC Book</span><div><button class="btn btn-sm btn-outline" onclick="showNotification('Edit coming soon!','info')">Edit</button> <button class="btn btn-sm btn-danger" onclick="showNotification('Delete coming soon!','info')">Del</button></div></div>
-                        <div class="category-item"><span>🛡️ Insurance</span><div><button class="btn btn-sm btn-outline" onclick="showNotification('Edit coming soon!','info')">Edit</button> <button class="btn btn-sm btn-danger" onclick="showNotification('Delete coming soon!','info')">Del</button></div></div>
-                        <div class="category-item"><span>📋 Permit</span><div><button class="btn btn-sm btn-outline" onclick="showNotification('Edit coming soon!','info')">Edit</button> <button class="btn btn-sm btn-danger" onclick="showNotification('Delete coming soon!','info')">Del</button></div></div>
-                        <div class="category-item"><span>🌿 Pollution Certificate</span><div><button class="btn btn-sm btn-outline" onclick="showNotification('Edit coming soon!','info')">Edit</button> <button class="btn btn-sm btn-danger" onclick="showNotification('Delete coming soon!','info')">Del</button></div></div>
-                        <div class="category-item"><span>✔️ Fitness Certificate</span><div><button class="btn btn-sm btn-outline" onclick="showNotification('Edit coming soon!','info')">Edit</button> <button class="btn btn-sm btn-danger" onclick="showNotification('Delete coming soon!','info')">Del</button></div></div>
-                        <div class="category-item"><span>🧾 Road Tax</span><div><button class="btn btn-sm btn-outline" onclick="showNotification('Edit coming soon!','info')">Edit</button> <button class="btn btn-sm btn-danger" onclick="showNotification('Delete coming soon!','info')">Del</button></div></div>
+                <div class="card-body" style="padding:0">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Last Login</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>👤 Admin User</td>
+                                    <td>admin@janai.com</td>
+                                    <td><span class="badge info">Admin</span></td>
+                                    <td><span class="badge success">Active</span></td>
+                                    <td>Today, 9:30 AM</td>
+                                    <td><button class="btn btn-sm btn-outline"
+                                            onclick="showNotification('Edit user coming soon!','info')">Edit</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>👤 Fleet Manager</td>
+                                    <td>manager@janai.com</td>
+                                    <td><span class="badge warning">Manager</span></td>
+                                    <td><span class="badge success">Active</span></td>
+                                    <td>Yesterday, 6:15 PM</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline"
+                                            onclick="showNotification('Edit user coming soon!','info')">Edit</button>
+                                        <button class="btn btn-sm btn-danger"
+                                            onclick="showNotification('Delete user coming soon!','info')">Delete</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>👤 Accountant</td>
+                                    <td>accounts@janai.com</td>
+                                    <td><span class="badge secondary">Staff</span></td>
+                                    <td><span class="badge success">Active</span></td>
+                                    <td>2 days ago</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline"
+                                            onclick="showNotification('Edit user coming soon!','info')">Edit</button>
+                                        <button class="btn btn-sm btn-danger"
+                                            onclick="showNotification('Delete user coming soon!','info')">Delete</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</main>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="assets/js/api.js"></script>
-<script src="assets/js/auth.js"></script>
-<script src="assets/js/main.js"></script>
-<script>
-$(function(){
-    // Tab switching
-    $('.tab-btn').on('click', function(){
-        $('.tab-btn').removeClass('active');
-        $('.tab-pane').removeClass('active');
-        $(this).addClass('active');
-        $('#'+$(this).data('tab')).addClass('active');
-    });
+        <!-- Notification Settings Tab -->
+        <div class="tab-pane" id="notif-settings">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Notification Preferences</h2>
+                </div>
+                <div class="card-body">
+                    <form id="notifSettingsForm">
+                        <div class="settings-section">
+                            <h3>📧 Email Notifications</h3>
+                            <div class="settings-list">
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <h4>EMI Due Reminder</h4>
+                                        <p>Get notified before EMI due date</p>
+                                    </div>
+                                    <div class="setting-controls">
+                                        <select class="filter-select">
+                                            <option>5 days before</option>
+                                            <option>3 days before</option>
+                                            <option>1 day before</option>
+                                        </select>
+                                        <label class="toggle"><input type="checkbox" checked><span
+                                                class="toggle-slider"></span></label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <h4>Document Expiry Alert</h4>
+                                        <p>Reminder for RC, Insurance, Permit, etc.</p>
+                                    </div>
+                                    <div class="setting-controls">
+                                        <select class="filter-select" id="docExpiryDays">
+                                            <option value="5">5 days before</option>
+                                            <option value="3">3 days before</option>
+                                            <option value="1">1 day before</option>
+                                        </select>
+                                        <label class="toggle">
+                                            <input type="checkbox" id="docExpiryToggle" checked>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <h4>Tyre Change Alert</h4>
+                                        <p>Get notified when tyre change is needed</p>
+                                    </div>
+                                    <div class="setting-controls">
+                                        <select class="filter-select">
+                                            <option>5,000 km before</option>
+                                            <option>3,000 km before</option>
+                                            <option>1,000 km before</option>
+                                        </select>
+                                        <label class="toggle"><input type="checkbox" checked><span
+                                                class="toggle-slider"></span></label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <h4>Service Due Reminder</h4>
+                                        <p>Vehicle servicing reminder</p>
+                                    </div>
+                                    <div class="setting-controls">
+                                        <select class="filter-select">
+                                            <option>7 days before</option>
+                                            <option>3 days before</option>
+                                            <option>1 day before</option>
+                                        </select>
+                                        <label class="toggle"><input type="checkbox" checked><span
+                                                class="toggle-slider"></span></label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <h4>GST Payment Reminder</h4>
+                                        <p>Monthly GST payment reminder</p>
+                                    </div>
+                                    <div class="setting-controls">
+                                        <select class="filter-select">
+                                            <option>10 days before</option>
+                                            <option>5 days before</option>
+                                        </select>
+                                        <label class="toggle"><input type="checkbox" checked><span
+                                                class="toggle-slider"></span></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="settings-section">
+                            <h3>📱 SMS Notifications</h3>
+                            <div class="settings-list">
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <h4>EMI Due (Same Day)</h4>
+                                        <p>SMS on EMI due date</p>
+                                    </div>
+                                    <div class="setting-controls"><label class="toggle"><input type="checkbox"
+                                                checked><span class="toggle-slider"></span></label></div>
+                                </div>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <h4>Document Expiry Urgent</h4>
+                                        <p>SMS when document expires in 7 days</p>
+                                    </div>
+                                    <div class="setting-controls"><label class="toggle"><input type="checkbox"
+                                                checked><span class="toggle-slider"></span></label></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">💾 Save Preferences</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-    // Forms
-    $('#companyForm').on('submit', function(e){ e.preventDefault(); showNotification('Company settings saved!','success'); });
-    $('#notifSettingsForm').on('submit', function(e){ e.preventDefault(); showNotification('Notification preferences saved!','success'); });
-    $('#addUserBtn').on('click', function(){ showNotification('Add user feature coming soon!','info'); });
-});
-</script>
+        <!-- Categories Tab -->
+        <div class="tab-pane" id="categories">
+            <div class="categories-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>💰 Expense Categories</h2>
+                        <button class="btn btn-sm btn-primary"
+                            onclick="showNotification('Add category coming soon!','info')">+ Add</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="category-list">
+                            <div class="category-item"><span>⛽ Fuel</span>
+                                <div><button class="btn btn-sm btn-outline"
+                                        onclick="showNotification('Edit coming soon!','info')">Edit</button> <button
+                                        class="btn btn-sm btn-danger"
+                                        onclick="showNotification('Delete coming soon!','info')">Del</button></div>
+                            </div>
+                            <div class="category-item"><span>💰 EMI / Finance</span>
+                                <div><button class="btn btn-sm btn-outline"
+                                        onclick="showNotification('Edit coming soon!','info')">Edit</button> <button
+                                        class="btn btn-sm btn-danger"
+                                        onclick="showNotification('Delete coming soon!','info')">Del</button></div>
+                            </div>
+                            <div class="category-item"><span>⚙️ Servicing</span>
+                                <div><button class="btn btn-sm btn-outline"
+                                        onclick="showNotification('Edit coming soon!','info')">Edit</button> <button
+                                        class="btn btn-sm btn-danger"
+                                        onclick="showNotification('Delete coming soon!','info')">Del</button></div>
+                            </div>
+                            <div class="category-item"><span>🔧 Repair</span>
+                                <div><button class="btn btn-sm btn-outline"
+                                        onclick="showNotification('Edit coming soon!','info')">Edit</button> <button
+                                        class="btn btn-sm btn-danger"
+                                        onclick="showNotification('Delete coming soon!','info')">Del</button></div>
+                            </div>
+                            <div class="category-item"><span>🛞 Tyres</span>
+                                <div><button class="btn btn-sm btn-outline"
+                                        onclick="showNotification('Edit coming soon!','info')">Edit</button> <button
+                                        class="btn btn-sm btn-danger"
+                                        onclick="showNotification('Delete coming soon!','info')">Del</button></div>
+                            </div>
+                            <div class="category-item"><span>👥 Salaries</span>
+                                <div><button class="btn btn-sm btn-outline"
+                                        onclick="showNotification('Edit coming soon!','info')">Edit</button> <button
+                                        class="btn btn-sm btn-danger"
+                                        onclick="showNotification('Delete coming soon!','info')">Del</button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2>📄 Document Types</h2>
+                        <button class="btn btn-sm btn-primary"
+                            onclick="showNotification('Add document type coming soon!','info')">+ Add</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="category-list">
+                            <div class="category-item"><span>📄 RC Book</span>
+                                <div><button class="btn btn-sm btn-outline"
+                                        onclick="showNotification('Edit coming soon!','info')">Edit</button> <button
+                                        class="btn btn-sm btn-danger"
+                                        onclick="showNotification('Delete coming soon!','info')">Del</button></div>
+                            </div>
+                            <div class="category-item"><span>🛡️ Insurance</span>
+                                <div><button class="btn btn-sm btn-outline"
+                                        onclick="showNotification('Edit coming soon!','info')">Edit</button> <button
+                                        class="btn btn-sm btn-danger"
+                                        onclick="showNotification('Delete coming soon!','info')">Del</button></div>
+                            </div>
+                            <div class="category-item"><span>📋 Permit</span>
+                                <div><button class="btn btn-sm btn-outline"
+                                        onclick="showNotification('Edit coming soon!','info')">Edit</button> <button
+                                        class="btn btn-sm btn-danger"
+                                        onclick="showNotification('Delete coming soon!','info')">Del</button></div>
+                            </div>
+                            <div class="category-item"><span>🌿 Pollution Certificate</span>
+                                <div><button class="btn btn-sm btn-outline"
+                                        onclick="showNotification('Edit coming soon!','info')">Edit</button> <button
+                                        class="btn btn-sm btn-danger"
+                                        onclick="showNotification('Delete coming soon!','info')">Del</button></div>
+                            </div>
+                            <div class="category-item"><span>✔️ Fitness Certificate</span>
+                                <div><button class="btn btn-sm btn-outline"
+                                        onclick="showNotification('Edit coming soon!','info')">Edit</button> <button
+                                        class="btn btn-sm btn-danger"
+                                        onclick="showNotification('Delete coming soon!','info')">Del</button></div>
+                            </div>
+                            <div class="category-item"><span>🧾 Road Tax</span>
+                                <div><button class="btn btn-sm btn-outline"
+                                        onclick="showNotification('Edit coming soon!','info')">Edit</button> <button
+                                        class="btn btn-sm btn-danger"
+                                        onclick="showNotification('Delete coming soon!','info')">Del</button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script>
+        $(function () {
+            // ── Tab switching ────────────────────────────────────────────────────────
+            $('.tab-btn').on('click', function () {
+                $('.tab-btn').removeClass('active');
+                $('.tab-pane').removeClass('active');
+                $(this).addClass('active');
+                $('#' + $(this).data('tab')).addClass('active');
+            });
+
+            // ── Forms ────────────────────────────────────────────────────────────────
+            $('#companyForm').on('submit', function (e) {
+                e.preventDefault();
+                showNotification('Company settings saved!', 'success');
+            });
+            $('#addUserBtn').on('click', function () {
+                showNotification('Add user feature coming soon!', 'info');
+            });
+
+            // ── Notification Preferences ─────────────────────────────────────────────
+
+            var NOTIF_KEY = 'notifPrefs';
+
+            var DEFAULT_PREFS = {
+                docExpiry: {
+                    enabled: true,
+                    days: 5   // must be one of the values in REMINDER_DAYS in layout.js
+                }
+            };
+
+            function loadPrefs() {
+                try {
+                    return JSON.parse(localStorage.getItem(NOTIF_KEY)) || DEFAULT_PREFS;
+                } catch (e) {
+                    return DEFAULT_PREFS;
+                }
+            }
+
+            function savePrefs(prefs) {
+                localStorage.setItem(NOTIF_KEY, JSON.stringify(prefs));
+            }
+
+            // Paint the saved values onto the form
+            function applyPrefsToForm(prefs) {
+                $('#docExpiryDays').val(prefs.docExpiry.days);
+                $('#docExpiryToggle').prop('checked', prefs.docExpiry.enabled);
+                updateDocExpiryState(prefs.docExpiry.enabled);
+            }
+
+            // Grey out the select when the toggle is off
+            function updateDocExpiryState(enabled) {
+                $('#docExpiryDays')
+                    .prop('disabled', !enabled)
+                    .css({
+                        'opacity': enabled ? 1 : 0.45,
+                        'pointer-events': enabled ? 'auto' : 'none',
+                        'cursor': enabled ? 'pointer' : 'not-allowed'
+                    });
+            }
+
+            // Toggle interaction
+            $('#docExpiryToggle').on('change', function () {
+                updateDocExpiryState(this.checked);
+            });
+
+            // Save
+            $('#notifSettingsForm').on('submit', function (e) {
+                e.preventDefault();
+                var prefs = {
+                    docExpiry: {
+                        enabled: $('#docExpiryToggle').is(':checked'),
+                        days: parseInt($('#docExpiryDays').val(), 10)
+                    }
+                };
+                savePrefs(prefs);
+                // Clear alert cache so layout.js re-generates with new thresholds on next load
+                sessionStorage.removeItem('alerts');
+                showNotification('Notification preferences saved!', 'success');
+            });
+
+            // Boot — restore saved values
+            applyPrefsToForm(loadPrefs());
+        });
+    </script>
 </body>
+
 </html>

@@ -1,72 +1,74 @@
 $(function () {
     var allVehicles = [], filtered = [], deleteTargetId = null;
 
-
+    // ── Modal helpers ───────────────────────────────────────────────────────
 
     function openModal(id) { $('#' + id).addClass('open'); $('body').css('overflow', 'hidden'); }
     function closeModal(id) { $('#' + id).removeClass('open'); $('body').css('overflow', ''); }
-    $('.crm-modal-overlay').on('click', function (e) { if ($(e.target).hasClass('crm-modal-overlay')) closeModal($(this).attr('id')); });
 
-    function generateAlerts(vehicles) {
-        const alerts = [];
-        const today = new Date();
-        const REMINDER_DAYS = [10, 5, 2, 0];
+    $('.crm-modal-overlay').on('click', function (e) {
+        if ($(e.target).hasClass('crm-modal-overlay')) closeModal($(this).attr('id'));
+    });
 
-        vehicles.forEach(vehicle => {
-            (vehicle.documents || []).forEach(doc => {
-                if (!doc.expiry_date) return;
+    // ── Core data load ──────────────────────────────────────────────────────
 
-                const expiry = new Date(doc.expiry_date);
-                const diffTime = expiry - today;
-                const daysLeft = diffTime < 0 ? 0 : Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                if (REMINDER_DAYS.includes(daysLeft)) {
-                    alerts.push({
-                        vehicleId: vehicle.id,
-                        vehicleNo: vehicle.vehicle_number,
-                        type: doc.document_type || "document",
-                        daysLeft: daysLeft,
-                        message: daysLeft == 0 ? `${doc.type || "Document"} is expired` : `${doc.type || "Document"} expires in ${daysLeft} days`
-                    });
-                }
-            });
-        });
-
-        return alerts;
-    }
     function loadVehicles() {
-        $('#vehiclesGrid').html('<div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div>');
+        $('#vehiclesGrid').html(
+            '<div class="skeleton skeleton-card"></div>' +
+            '<div class="skeleton skeleton-card"></div>' +
+            '<div class="skeleton skeleton-card"></div>' +
+            '<div class="skeleton skeleton-card"></div>'
+        );
         $('#paginationBar').hide();
+
         apiRequest(API_ENDPOINTS.VEHICLES, 'GET', null, true)
             .done(function (res) {
                 allVehicles = Array.isArray(res) ? res : (res.results || []);
                 filtered = allVehicles.slice();
 
+                // Generate alerts, cache them, then notify layout.js to refresh badge
+                var alerts = generateAlerts(allVehicles);   // defined in layout.js (window.generateAlerts)
+                sessionStorage.setItem('alerts', JSON.stringify(alerts));
+                document.dispatchEvent(new CustomEvent('alertsReady'));
 
-                window.alerts = generateAlerts(allVehicles);
-                // document.dispatchEvent(new CustomEvent('alertsReady', { detail: window.alerts })); -->This can also be done 
-                sessionStorage.setItem('alerts', JSON.stringify(window.alerts));
                 applyFilters();
             })
             .fail(function (xhr) {
                 if (xhr.status === 401) { handleSessionExpired(); return; }
-                $('#vehiclesGrid').html('<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--gray-500)"><p style="font-size:2.5rem">⚠️</p><p style="margin:.5rem 0 1rem">Failed to load vehicles.</p><button class="btn btn-primary" id="retryBtn">🔄 Retry</button></div>');
+                $('#vehiclesGrid').html(
+                    '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--gray-500)">' +
+                    '<p style="font-size:2.5rem">⚠️</p>' +
+                    '<p style="margin:.5rem 0 1rem">Failed to load vehicles.</p>' +
+                    '<button class="btn btn-primary" id="retryBtn">🔄 Retry</button>' +
+                    '</div>'
+                );
                 $('#retryBtn').on('click', loadVehicles);
             });
     }
 
+    // ── Render ──────────────────────────────────────────────────────────────
+
     function renderVehicles(list) {
         if (!list.length) {
-            $('#vehiclesGrid').html('<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--gray-500)"><p style="font-size:3rem">🚛</p><h3 style="margin:.75rem 0 .5rem;color:var(--gray-700)">No vehicles found</h3><button class="btn btn-primary" id="emptyAddBtn" style="margin-top:.75rem">+ Add First Vehicle</button></div>');
+            $('#vehiclesGrid').html(
+                '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--gray-500)">' +
+                '<p style="font-size:3rem">🚛</p>' +
+                '<h3 style="margin:.75rem 0 .5rem;color:var(--gray-700)">No vehicles found</h3>' +
+                '<button class="btn btn-primary" id="emptyAddBtn" style="margin-top:.75rem">+ Add First Vehicle</button>' +
+                '</div>'
+            );
             $('#emptyAddBtn').on('click', openAddModal);
             $('#paginationBar').hide();
             return;
         }
+
         var html = list.map(function (v) {
             var sc = { active: 'active', idle: 'idle', maintenance: 'maintenance' }[v.status] || 'idle';
             var sl = v.status ? v.status.charAt(0).toUpperCase() + v.status.slice(1) : 'Unknown';
-            var driverName = (v.driver && v.driver.name) ? v.driver.name : 'No Driver Assigned'; return '<div class="vehicle-card" data-id="' + v.id + '" data-status="' + (v.status || '') + '">'
-                + '<div class="vehicle-header"><div class="vehicle-number">' + (v.vehicle_number || '—') + '</div><span class="status-badge ' + sc + '">' + sl + '</span></div>'
+            var driverName = (v.driver && v.driver.name) ? v.driver.name : 'No Driver Assigned';
+            return '<div class="vehicle-card" data-id="' + v.id + '" data-status="' + (v.status || '') + '">'
+                + '<div class="vehicle-header"><div class="vehicle-number">' + (v.vehicle_number || '—') + '</div>'
+                + '<span class="status-badge ' + sc + '">' + sl + '</span></div>'
                 + '<div class="vehicle-icon">🚛</div>'
                 + '<div class="vehicle-info">'
                 + '<p class="vehicle-type">' + (v.vehicle_type || '—') + '</p>'
@@ -80,13 +82,17 @@ $(function () {
                 + '<button class="btn btn-sm btn-danger delete-vehicle-btn" data-id="' + v.id + '" data-number="' + (v.vehicle_number || v.id) + '">🗑</button>'
                 + '</div></div>';
         }).join('');
+
         $('#vehiclesGrid').html(html);
         $('#paginationBar').show();
         $('#paginationInfo').text('Showing ' + list.length + ' of ' + allVehicles.length + ' vehicles');
     }
 
+    // ── Filters ─────────────────────────────────────────────────────────────
+
     function applyFilters() {
-        var q = $('#searchVehicle').val().toLowerCase(), s = $('#filterStatus').val();
+        var q = $('#searchVehicle').val().toLowerCase();
+        var s = $('#filterStatus').val();
         filtered = allVehicles.filter(function (v) {
             var mQ = !q || (v.vehicle_number || '').toLowerCase().includes(q) || (v.current_driver_name || '').toLowerCase().includes(q);
             var mS = !s || (v.status || '') === s;
@@ -94,9 +100,18 @@ $(function () {
         });
         renderVehicles(filtered);
     }
+
     $('#searchVehicle').on('input', applyFilters);
     $('#filterStatus').on('change', applyFilters);
-    $('#refreshBtn').on('click', function () { $('#searchVehicle').val(''); $('#filterStatus').val(''); loadVehicles(); });
+    $('#refreshBtn').on('click', function () {
+        $('#searchVehicle').val('');
+        $('#filterStatus').val('');
+        // Clear cache so layout.js re-fetches fresh alerts on next non-vehicle page
+        sessionStorage.removeItem('alerts');
+        loadVehicles();
+    });
+
+    // ── Add / Edit modal ─────────────────────────────────────────────────────
 
     function openAddModal() {
         $('#vehicleModalTitle').text('+ Add Vehicle');
@@ -104,11 +119,13 @@ $(function () {
         $('#vehicleEditId').val('');
         openModal('vehicleModalOverlay');
     }
+
     $('#addVehicleBtn').on('click', openAddModal);
     $('#closeVehicleModal,#cancelVehicleModal').on('click', function () { closeModal('vehicleModalOverlay'); });
 
     $(document).on('click', '.edit-vehicle-btn', function () {
-        var id = $(this).data('id'), v = allVehicles.find(function (x) { return x.id == id; });
+        var id = $(this).data('id');
+        var v = allVehicles.find(function (x) { return x.id == id; });
         if (!v) { showNotification('Vehicle not found', 'error'); return; }
         $('#vehicleModalTitle').text('✏️ Edit Vehicle');
         $('#vehicleEditId').val(v.id);
@@ -127,7 +144,9 @@ $(function () {
     });
 
     $('#saveVehicleBtn').on('click', function () {
-        var number = $('#vNumber').val().trim(), type = $('#vType').val(), location = $('#vLocation').val().trim();
+        var number = $('#vNumber').val().trim();
+        var type = $('#vType').val();
+        var location = $('#vLocation').val().trim();
         if (!number) { showNotification('Vehicle number is required', 'error'); $('#vNumber').focus(); return; }
         if (!type) { showNotification('Vehicle type is required', 'error'); $('#vType').focus(); return; }
         if (!location) { showNotification('Location is required', 'error'); $('#vLocation').focus(); return; }
@@ -141,8 +160,11 @@ $(function () {
         if ($('#vChassis').val().trim()) payload.chassis_number = $('#vChassis').val().trim();
         if ($('#vEngine').val().trim()) payload.engine_number = $('#vEngine').val().trim();
 
-        var editId = $('#vehicleEditId').val(), isEdit = !!editId;
-        var btn = $(this); btn.text('Saving…').prop('disabled', true);
+        var editId = $('#vehicleEditId').val();
+        var isEdit = !!editId;
+        var btn = $(this);
+        btn.text('Saving…').prop('disabled', true);
+
         var endpoint = isEdit ? API_ENDPOINTS.VEHICLE_DETAIL.replace('{id}', editId) : API_ENDPOINTS.VEHICLES;
         var method = isEdit ? 'PATCH' : 'POST';
 
@@ -151,6 +173,7 @@ $(function () {
                 btn.text('💾 Save Vehicle').prop('disabled', false);
                 showNotification(isEdit ? 'Vehicle updated!' : 'Vehicle added!', 'success');
                 closeModal('vehicleModalOverlay');
+                sessionStorage.removeItem('alerts'); // force fresh alert cache after change
                 loadVehicles();
             })
             .fail(function (xhr) {
@@ -162,20 +185,26 @@ $(function () {
             });
     });
 
+    // ── Delete ───────────────────────────────────────────────────────────────
+
     $(document).on('click', '.delete-vehicle-btn', function () {
         deleteTargetId = $(this).data('id');
         $('#deleteVehicleNum').text($(this).data('number'));
         openModal('deleteVehicleOverlay');
     });
+
     $('#confirmDeleteBtn').on('click', function () {
         if (!deleteTargetId) return;
-        var btn = $(this); btn.text('Deleting…').prop('disabled', true);
+        var btn = $(this);
+        btn.text('Deleting…').prop('disabled', true);
         apiRequest(API_ENDPOINTS.VEHICLE_DETAIL.replace('{id}', deleteTargetId), 'DELETE', null, true)
             .done(function () {
                 btn.text('🗑 Yes, Delete').prop('disabled', false);
                 showNotification('Vehicle deleted!', 'success');
                 closeModal('deleteVehicleOverlay');
-                loadVehicles(); deleteTargetId = null;
+                sessionStorage.removeItem('alerts'); // force fresh alert cache after deletion
+                loadVehicles();
+                deleteTargetId = null;
             })
             .fail(function (xhr) {
                 btn.text('🗑 Yes, Delete').prop('disabled', false);
@@ -183,7 +212,9 @@ $(function () {
                 showNotification('Failed to delete vehicle.', 'error');
             });
     });
+
     $('#closeDeleteModal,#cancelDeleteModal').on('click', function () { closeModal('deleteVehicleOverlay'); });
 
+    // ── Boot ─────────────────────────────────────────────────────────────────
     loadVehicles();
 });

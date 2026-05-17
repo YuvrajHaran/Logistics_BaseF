@@ -57,7 +57,7 @@
                 <div class="stat-icon orange">⚠️</div>
                 <div class="stat-content">
                     <h3>Pending Alerts</h3>
-                    <p class="stat-number">8</p>
+                    <p class="stat-number" id="dashAlertCount">—</p>
                     <span class="stat-change">Needs attention</span>
                 </div>
             </div>
@@ -188,29 +188,151 @@
     <script src="assets/js/api.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/main.js"></script>
-    <script src="assets/js/vehicles.js"></script>
     <script>
         $(function () {
-            // Bar chart
+
+            // ── Render recent alerts from sessionStorage (same data as notifications.html) ──
+
+            function getUrgency(daysLeft) {
+                if (daysLeft <= 0) return 'urgent';
+                if (daysLeft <= 7) return 'warning';
+                return 'info';
+            }
+
+            function urgencyIcon(u) {
+                return u === 'urgent' ? '🔴' : u === 'warning' ? '⚠️' : 'ℹ️';
+            }
+
+            function daysLabel(daysLeft, expiryDate) {
+                if (daysLeft <= 0 && expiryDate) {
+                    const d = new Date(expiryDate);
+                    const day = d.getDate();
+                    const suffix = day % 10 === 1 && day !== 11 ? 'st'
+                        : day % 10 === 2 && day !== 12 ? 'nd'
+                            : day % 10 === 3 && day !== 13 ? 'rd' : 'th';
+                    const month = d.toLocaleString('en-IN', { month: 'long' });
+                    const year = d.getFullYear();
+                    return 'Expired on ' + day + suffix + ' ' + month + ' ' + year;
+                }
+                if (daysLeft === 1) return 'Expires tomorrow';
+                return 'Expires in ' + daysLeft + ' days';
+            }
+
+            function typeLabel(type) {
+                if (!type) return 'Document';
+                return type.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+            }
+
+            function renderDashboardAlerts(alerts) {
+                const container = $('.alerts-list');
+
+                if (!alerts || !alerts.length) {
+                    container.html(
+                        '<div style="text-align:center;padding:2rem;color:var(--gray-500);">' +
+                        '<p style="font-size:2rem;">✅</p>' +
+                        '<p style="margin-top:.5rem;font-size:.875rem;">No pending alerts</p>' +
+                        '</div>'
+                    );
+                    // Also update the stat card
+                    $('#dashAlertCount').text(0);
+                    return;
+                }
+
+                // Sort by urgency then daysLeft — same logic as notifications.html
+                const severityRank = { urgent: 0, warning: 1, info: 2 };
+                const sorted = alerts.slice().sort(function (a, b) {
+                    const ua = getUrgency(a.daysLeft), ub = getUrgency(b.daysLeft);
+                    if (severityRank[ua] !== severityRank[ub]) return severityRank[ua] - severityRank[ub];
+                    return a.daysLeft - b.daysLeft;
+                });
+
+                // Limit to 4 on dashboard
+                const DASHBOARD_LIMIT = 4;
+                const visible = sorted.slice(0, DASHBOARD_LIMIT);
+                const remaining = sorted.length - DASHBOARD_LIMIT;
+
+                const html = visible.map(function (alert) {
+                    const urgency = getUrgency(alert.daysLeft);
+                    const icon = urgencyIcon(urgency);
+                    const title = typeLabel(alert.type) + ' — ' + (alert.vehicleNo || '');
+                    const message = daysLabel(alert.daysLeft, alert.expiry_date);
+
+                    return '<div class="alert-item ' + urgency + '">' +
+                        '<div class="alert-icon">' + icon + '</div>' +
+                        '<div class="alert-content">' +
+                        '<h4>' + title + '</h4>' +
+                        '<p>' + message + '</p>' +
+                        '<a href="vehicle-detail.html?id=' + alert.vehicleId + '" ' +
+                        'style="font-size:.75rem;color:var(--primary);text-decoration:none;">View Vehicle →</a>' +
+                        '</div>' +
+                        '</div>';
+                }).join('');
+
+                // Show "+N more" footer if alerts exceed limit
+                const moreHtml = remaining > 0
+                    ? '<div style="text-align:center;padding:.75rem;font-size:.8rem;color:var(--gray-500);border-top:1px solid var(--gray-100);margin-top:.5rem;">' +
+                    '<a href="notifications.html" style="color:var(--primary);text-decoration:none;">+' + remaining + ' more alert' + (remaining > 1 ? 's' : '') + ' → View All</a>' +
+                    '</div>'
+                    : '';
+
+                container.html(html + moreHtml);
+
+                // Update the stat card count
+                $('#dashAlertCount').text(alerts.length);
+            }
+
+            function loadDashboardAlerts() {
+                const stored = sessionStorage.getItem('alerts');
+
+                if (stored !== null) {
+                    renderDashboardAlerts(JSON.parse(stored));
+                    return;
+                }
+
+                // Cache not ready yet — wait for layout.js background fetch
+                document.addEventListener('alertsReady', function onReady() {
+                    document.removeEventListener('alertsReady', onReady);
+                    const fresh = sessionStorage.getItem('alerts');
+                    renderDashboardAlerts(fresh ? JSON.parse(fresh) : []);
+                });
+            }
+
+            loadDashboardAlerts();
+
+            // ── Charts (unchanged) ───────────────────────────────────────────────────
+
             new Chart(document.getElementById('expensesChart'), {
                 type: 'bar',
                 data: {
                     labels: ['Fuel', 'EMI', 'Maint.', 'Tyres', 'Salary', 'Others'],
                     datasets: [{
-                        label: '₹', data: [450000, 400000, 200000, 100000, 75000, 25000],
+                        label: '₹',
+                        data: [450000, 400000, 200000, 100000, 75000, 25000],
                         backgroundColor: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#6b7280'],
                         borderRadius: 6
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '₹' + (v / 100000).toFixed(1) + 'L' } } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: v => '₹' + (v / 100000).toFixed(1) + 'L' } } }
+                }
             });
 
-            // Donut
             new Chart(document.getElementById('vehicleDonut'), {
                 type: 'doughnut',
-                data: { labels: ['Running', 'Idle', 'Maintenance'], datasets: [{ data: [15, 8, 2], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
-                options: { responsive: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
+                data: {
+                    labels: ['Running', 'Idle', 'Maintenance'],
+                    datasets: [{ data: [15, 8, 2], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }]
+                },
+                options: {
+                    responsive: false,
+                    cutout: '70%',
+                    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }
+                }
             });
+
         });
     </script>
 </body>

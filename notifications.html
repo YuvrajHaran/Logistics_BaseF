@@ -17,7 +17,6 @@
             <button class="btn btn-outline" id="markAllReadBtn">✅ Mark All Read</button>
         </div>
 
-        <!-- Filter Tabs -->
         <div class="notification-tabs">
             <button class="notif-tab active" data-filter="all">All <span class="tab-count"
                     id="count-all">0</span></button>
@@ -32,7 +31,6 @@
         </div>
 
         <div class="notifications-container" id="notificationsList">
-            <!-- Skeleton while loading -->
             <div id="notif-skeleton" style="display:flex;flex-direction:column;gap:.75rem;">
                 <div
                     style="height:90px;border-radius:.75rem;background:linear-gradient(90deg,#f3f4f6 25%,#f9fafb 50%,#f3f4f6 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;">
@@ -44,30 +42,19 @@
                     style="height:90px;border-radius:.75rem;background:linear-gradient(90deg,#f3f4f6 25%,#f9fafb 50%,#f3f4f6 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;">
                 </div>
             </div>
-        </div><!-- /notifications-container -->
+        </div>
     </main>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="assets/js/api.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/main.js"></script>
-    <script src="assets/js/vehicles.js"></script>
+
     <script>
-
-
-
         $(function () {
 
-            /* ─────────────────────────────────────────────────────
-               HELPERS
-            ───────────────────────────────────────────────────── */
+            /* ── Helpers ─────────────────────────────────────────────────────────── */
 
-            /**
-             * Derive urgency level from daysLeft.
-             * daysLeft === 0 or negative  → urgent
-             * daysLeft <= 7               → warning
-             * else                        → info
-             */
             function getUrgency(daysLeft) {
                 if (daysLeft <= 0) return 'urgent';
                 if (daysLeft <= 7) return 'warning';
@@ -78,30 +65,26 @@
                 return u === 'urgent' ? '🔴' : u === 'warning' ? '⚠️' : 'ℹ️';
             }
 
-            /**
-             * Build a human-readable time label from daysLeft.
-             */
-            function daysLabel(daysLeft) {
-                if (daysLeft < 0) return Math.abs(daysLeft) + ' day(s) overdue';
-                if (daysLeft === 0) return 'Due today';
-                if (daysLeft === 1) return 'Due tomorrow';
-                return 'Due in ' + daysLeft + ' days';
+            function daysLabel(daysLeft, expiryDate) {
+                if (daysLeft <= 0 && expiryDate) {
+                    const d = new Date(expiryDate);
+                    const day = d.getDate();
+                    const suffix = day % 10 === 1 && day !== 11 ? 'st'
+                        : day % 10 === 2 && day !== 12 ? 'nd'
+                            : day % 10 === 3 && day !== 13 ? 'rd' : 'th';
+                    const month = d.toLocaleString('en-IN', { month: 'long' });
+                    const year = d.getFullYear();
+                    return 'Expired on ' + day + suffix + ' ' + month + ' ' + year;
+                }
+                if (daysLeft === 1) return 'Expires tomorrow';
+                return 'Expires in ' + daysLeft + ' days';
             }
 
-            /**
-             * Build the document-type label from the `type` field.
-             * Converts snake_case / plain strings to Title Case.
-             */
             function typeLabel(type) {
                 if (!type) return 'Document';
-                return type
-                    .replace(/_/g, ' ')
-                    .replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+                return type.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
             }
 
-            /**
-             * Build a card title: "<TypeLabel> — <VehicleNo>"
-             */
             function buildTitle(alert) {
                 return typeLabel(alert.type) + ' — ' + (alert.vehicleNo || '');
             }
@@ -114,49 +97,40 @@
                     .replace(/>/g, '&gt;');
             }
 
-            /* ─────────────────────────────────────────────────────
-               RENDER
-            ───────────────────────────────────────────────────── */
+            /* ── Card builder ────────────────────────────────────────────────────── */
 
-            /**
-             * Render a single alert object into the card HTML string.
-             * All alerts from the API are treated as "unread" (fresh).
-             */
             function buildCard(alert) {
                 const urgency = getUrgency(alert.daysLeft);
                 const icon = urgencyIcon(urgency);
                 const title = escHtml(buildTitle(alert));
-                const message = escHtml(alert.message || '');
-                const timeStr = daysLabel(alert.daysLeft);
+                const timeStr = daysLabel(alert.daysLeft, alert.expiry_date);
                 const vehicleId = alert.vehicleId || '';
-
-                // Choose CTA button style
                 const ctaClass = urgency === 'urgent' ? 'btn-danger' : 'btn-primary';
                 const ctaLabel = urgency === 'urgent' ? 'Renew Now' : 'View Vehicle';
 
                 return `
-        <div class="notif-card unread ${urgency}" data-type="${urgency}">
-            <div class="notif-icon ${urgency}">${icon}</div>
-            <div class="notif-content">
-                <div class="notif-header">
-                    <h4>${title}</h4>
-                    <span class="notif-time">${timeStr}</span>
-                </div>
-                <p>${message}</p>
-                <div class="notif-actions">
-                    <a href="vehicle-detail.html?id=${escHtml(String(vehicleId))}"
-                       class="btn btn-sm ${ctaClass}">${ctaLabel}</a>
-                    <button class="btn btn-sm btn-outline mark-read-btn">Mark as Read</button>
-                </div>
+        <div class="notif-card unread ${urgency}" data-type="${urgency}"
+             data-vehicle-id="${escHtml(String(vehicleId))}"
+             data-doc-type="${escHtml(alert.type)}"
+             data-expiry-date="${escHtml(alert.expiry_date || '')}">
+          <div class="notif-icon ${urgency}">${icon}</div>
+          <div class="notif-content">
+            <div class="notif-header">
+              <h4>${title}</h4>
+              <span class="notif-time">${timeStr}</span>
             </div>
-            <div class="notif-unread-dot"></div>
+            <div class="notif-actions">
+              <a href="vehicle-detail.html?id=${escHtml(String(vehicleId))}"
+                 class="btn btn-sm ${ctaClass}">${ctaLabel}</a>
+              <button class="btn btn-sm btn-outline mark-read-btn">Mark as Read</button>
+            </div>
+          </div>
+          <div class="notif-unread-dot"></div>
         </div>`;
             }
 
-            /**
-             * Main render: groups all alerts under a single "Alerts" group,
-             * sorted by urgency (urgent first) then by daysLeft ascending.
-             */
+            /* ── Render ──────────────────────────────────────────────────────────── */
+
             function renderAlerts(alerts) {
                 $('#notif-skeleton').hide();
                 const container = $('#notificationsList');
@@ -173,47 +147,31 @@
                     return;
                 }
 
-                // Sort: urgent (daysLeft ≤ 0) → warning → info, then by daysLeft asc within each group
-                const severityRank = {
-                    urgent: 0,
-                    warning: 1,
-                    info: 2
-                };
-
-                const sorted = alerts.slice().sort((a, b) => {
-                    const ua = getUrgency(a.daysLeft);
-                    const ub = getUrgency(b.daysLeft);
-
-                    if (severityRank[ua] !== severityRank[ub]) {
-                        return severityRank[ua] - severityRank[ub];
-                    }
-
-                    // secondary sort: most critical first (overdue first)
+                const severityRank = { urgent: 0, warning: 1, info: 2 };
+                const sorted = alerts.slice().sort(function (a, b) {
+                    const ua = getUrgency(a.daysLeft), ub = getUrgency(b.daysLeft);
+                    if (severityRank[ua] !== severityRank[ub]) return severityRank[ua] - severityRank[ub];
                     return a.daysLeft - b.daysLeft;
                 });
-
-                const cardsHtml = sorted.map(buildCard).join('');
 
                 container.html(
                     '<div class="notif-group">' +
                     '<h3 class="notif-group-title">Document Alerts</h3>' +
-                    cardsHtml +
+                    sorted.map(buildCard).join('') +
                     '</div>'
                 );
 
                 updateCounts();
             }
 
-            /* ─────────────────────────────────────────────────────
-               COUNTS & TAB FILTER
-            ───────────────────────────────────────────────────── */
+            /* ── Counts & tabs ───────────────────────────────────────────────────── */
 
             function updateCounts() {
+                const total = $('.notif-card').length;
                 const unread = $('.notif-card.unread').length;
                 const urgent = $('.notif-card[data-type="urgent"]').length;
                 const warning = $('.notif-card[data-type="warning"]').length;
                 const info = $('.notif-card[data-type="info"]').length;
-                const total = $('.notif-card').length;
 
                 $('#count-all').text(total);
                 $('#count-unread').text(unread);
@@ -221,31 +179,37 @@
                 $('#count-warning').text(warning);
                 $('#count-info').text(info);
 
-                // Sync header / sidebar / bottom-nav badge
-                $('#notifBadge, #sidebarNotifBadge, #bottomNotifBadge').text(unread);
+                ['notifBadge', 'sidebarNotifBadge', 'bottomNotifBadge'].forEach(function (id) {
+                    const el = document.getElementById(id);
+                    if (el) { el.textContent = unread; el.style.display = unread === 0 ? 'none' : ''; }
+                });
             }
 
-            // Tab filter
+            /* ── Tab filter ──────────────────────────────────────────────────────── */
+
             $('.notif-tab').on('click', function () {
                 $('.notif-tab').removeClass('active');
                 $(this).addClass('active');
                 const filter = $(this).data('filter');
-                if (filter === 'all') { $('.notif-card').show(); }
-                else if (filter === 'unread') { $('.notif-card').hide(); $('.notif-card.unread').show(); }
-                else { $('.notif-card').hide(); $('.notif-card[data-type="' + filter + '"]').show(); }
+                if (filter === 'all') {
+                    $('.notif-card').show();
+                } else if (filter === 'unread') {
+                    $('.notif-card').hide(); $('.notif-card.unread').show();
+                } else {
+                    $('.notif-card').hide(); $('.notif-card[data-type="' + filter + '"]').show();
+                }
             });
 
-            // Mark single as read
+            /* ── Mark as read ────────────────────────────────────────────────────── */
+
             $(document).on('click', '.mark-read-btn', function () {
                 const card = $(this).closest('.notif-card');
-                card.removeClass('unread').addClass('read');
-                card.find('.notif-unread-dot').remove();
+                card.removeClass('unread').addClass('read').find('.notif-unread-dot').remove();
                 $(this).remove();
                 updateCounts();
                 showNotification('Marked as read', 'success');
             });
 
-            // Mark all as read
             $('#markAllReadBtn').on('click', function () {
                 $('.notif-card').removeClass('unread').addClass('read');
                 $('.notif-unread-dot').remove();
@@ -254,34 +218,37 @@
                 showNotification('All notifications marked as read', 'success');
             });
 
-            /* ─────────────────────────────────────────────────────
-               LOAD DATA FROM API
-               The backend returns an array of alert objects like:
-               { daysLeft, message, type, vehicleId, vehicleNo }
-            ───────────────────────────────────────────────────── */
-            // function loadAlerts() {
-            //     // Already loaded (same-page navigation)
-            //     if (window.alerts && window.alerts.length) {
-            //         renderAlerts(window.alerts);
-            //         return;
-            //     }
-            //     // Wait for vehicles.js to finish fetching
-            //     document.addEventListener('alertsReady', function (e) {
-            //         renderAlerts(e.detail);
-            //     });
-            // }
+            /* ── Load ────────────────────────────────────────────────────────────── */
+
             function loadAlerts() {
                 const stored = sessionStorage.getItem('alerts');
-                const alerts = stored ? JSON.parse(stored) : [];
-                renderAlerts(alerts);
+
+                if (stored !== null) {
+                    // Cache exists — render immediately
+                    const alerts = JSON.parse(stored);
+                    renderAlerts(alerts);
+                    return;
+                }
+
+                // Cache empty — layout.js is fetching in background, wait for it
+                document.addEventListener('alertsReady', function onReady() {
+                    document.removeEventListener('alertsReady', onReady);
+                    const fresh = sessionStorage.getItem('alerts');
+                    renderAlerts(fresh ? JSON.parse(fresh) : []);
+                });
+
+                // Safety net: 8s timeout
+                setTimeout(function () {
+                    if ($('#notif-skeleton').is(':visible')) {
+                        renderAlerts([]);
+                    }
+                }, 8000);
             }
 
             loadAlerts();
-
-            // ── Expose renderAlerts globally so caller code can also do:
-            //    renderAlerts(alerts)  after fetching elsewhere
         });
     </script>
+
 </body>
 
 </html>

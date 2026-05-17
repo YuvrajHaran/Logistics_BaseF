@@ -1,7 +1,9 @@
 /**
  * layout.js — Shared Navigation Component
  * Injects header + sidebar + mobile bottom nav into every page.
+ * Also fetches and caches vehicle alerts for the notification badge.
  */
+
 (function () {
   'use strict';
 
@@ -17,7 +19,6 @@
     { href: 'settings.html', icon: '⚙️', text: 'Settings', id: 'settings' },
   ];
 
-  // Bottom nav — 5 most-used items
   const BOTTOM_NAV = [
     { href: 'dashboard.html', icon: '📊', text: 'Home', id: 'dashboard' },
     { href: 'vehicles.html', icon: '🚛', text: 'Vehicles', id: 'vehicles' },
@@ -51,7 +52,7 @@
   <div class="header-right">
     <a href="notifications.html" class="notif-btn" id="notificationBtn">
       <span class="notif-icon">🔔</span>
-      <span class="notif-badge" id="notifBadge">8</span>
+      <span class="notif-badge" id="notifBadge" style="display:none">0</span>
     </a>
     <div class="user-menu">
       <button class="user-btn" id="userBtn">
@@ -74,7 +75,7 @@
     <a href="${item.href}" class="nav-item${isActive(item.id) ? ' active' : ''}">
       <span class="nav-icon">${item.icon}</span>
       <span class="nav-text">${item.text}</span>
-      ${item.id === 'notifications' ? '<span class="nav-badge" id="sidebarNotifBadge">8</span>' : ''}
+      ${item.id === 'notifications' ? '<span class="nav-badge" id="sidebarNotifBadge" style="display:none">0</span>' : ''}
     </a>`).join('');
 
     return `
@@ -103,37 +104,122 @@
   <a href="${item.href}" class="bottom-nav-item${isActive(item.id) ? ' active' : ''}">
     <span class="bottom-nav-icon">${item.icon}</span>
     <span class="bottom-nav-text">${item.text}</span>
-    ${item.id === 'notifications' ? '<span class="bottom-nav-badge" id="bottomNotifBadge">8</span>' : ''}
+    ${item.id === 'notifications' ? '<span class="bottom-nav-badge" id="bottomNotifBadge" style="display:none">0</span>' : ''}
   </a>`).join('');
     return `<nav class="bottom-nav" id="bottomNav">${items}</nav>`;
   }
 
-  function inject() {
-    const body = document.body;
-    // Skip login page
-    if (body.classList.contains('login-page') || getCurrentPage() === 'index' || getCurrentPage() === '') return;
-    // Inject
-    body.insertAdjacentHTML('afterbegin', buildHeader() + buildSidebar() + buildBottomNav());
-    setupSidebar();
-    setupUserMenu();
-    updateUserDisplay();
-    updateNotifBadge();
-  }
   function updateNotifBadge() {
     try {
       const stored = sessionStorage.getItem('alerts');
       const alerts = stored ? JSON.parse(stored) : [];
       const count = alerts.length;
-
       ['notifBadge', 'sidebarNotifBadge', 'bottomNotifBadge'].forEach(function (id) {
         const el = document.getElementById(id);
         if (el) {
           el.textContent = count;
-          // Hide badge if 0
           el.style.display = count === 0 ? 'none' : '';
         }
       });
     } catch (e) { }
+  }
+
+
+  function generateAlerts(vehicles) {
+    // Read user preference
+    var prefs = {};
+    try { prefs = JSON.parse(localStorage.getItem('notifPrefs')) || {}; } catch (e) { }
+
+    var docExpiryEnabled = prefs.docExpiry ? prefs.docExpiry.enabled : true;
+    var docExpiryDays = prefs.docExpiry ? parseInt(prefs.docExpiry.days, 10) : 10;
+
+    // Always alert on expiry day (0) and at the user-chosen threshold.
+    // If alerts are disabled entirely, use empty set so nothing shows.
+    var REMINDER_DAYS = docExpiryEnabled ? [0, docExpiryDays] : [];
+
+    // Deduplicate in case user chose 0 (same as expiry day)
+    REMINDER_DAYS = REMINDER_DAYS.filter(function (v, i, a) { return a.indexOf(v) === i; });
+
+    var alerts = [];
+    var today = new Date();
+
+    vehicles.forEach(function (vehicle) {
+      (vehicle.documents || []).forEach(function (doc) {
+        if (!doc.expiry_date) return;
+        var expiry = new Date(doc.expiry_date);
+        var diffTime = expiry - today;
+        const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (daysLeft <= 0 || REMINDER_DAYS.includes(daysLeft)) {
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleNo: vehicle.vehicle_number,
+            type: doc.document_type || 'document',
+            daysLeft: daysLeft,
+            expiry_date: doc.expiry_date,   // ← make sure this is here
+            message: daysLeft <= 0
+              ? (doc.document_type || 'Document') + ' expired on ' + formatExpiry(doc.expiry_date)
+              : (doc.document_type || 'Document') + ' expires in ' + daysLeft + ' days'
+          });
+        }
+      });
+    });
+
+    return alerts;
+  }
+
+  // ── Background fetch — runs on every page load ────────────────────────────
+  // Skips the API call if alerts are already cached in this session.
+  // vehicles.js will also call this after its own fetch to keep data fresh.
+
+  function fetchAndCacheAlerts() {
+    // Already cached — just paint the badge and return
+    if (sessionStorage.getItem('alerts') !== null) {
+      updateNotifBadge();
+      return;
+    }
+
+    // Wait until jQuery + api.js are ready (they load after layout.js)
+    var attempts = 0;
+    var interval = setInterval(function () {
+      attempts++;
+      if (typeof apiRequest === 'function' && typeof API_ENDPOINTS !== 'undefined') {
+        clearInterval(interval);
+        apiRequest(API_ENDPOINTS.VEHICLES, 'GET', null, true)
+          .done(function (res) {
+            var vehicles = Array.isArray(res) ? res : (res.results || []);
+            var alerts = generateAlerts(vehicles);
+            sessionStorage.setItem('alerts', JSON.stringify(alerts));
+            updateNotifBadge();
+          })
+          .fail(function () { /* silent — badge stays hidden */ });
+      }
+      if (attempts >= 30) clearInterval(interval);
+    }, 100);
+  }
+
+  // ── Listen for vehicles.js signalling a fresh fetch ───────────────────────
+  // vehicles.js dispatches 'alertsReady' after its own loadVehicles() call,
+  // so the badge stays in sync even when the vehicle list changes.
+  document.addEventListener('alertsReady', function () {
+    updateNotifBadge();
+  });
+
+  // ── Expose generateAlerts globally so vehicles.js can reuse it ───────────
+  window.generateAlerts = generateAlerts;
+
+  // ── Main inject ───────────────────────────────────────────────────────────
+
+  function inject() {
+    const body = document.body;
+    if (body.classList.contains('login-page') || getCurrentPage() === 'index' || getCurrentPage() === '') return;
+
+    body.insertAdjacentHTML('afterbegin', buildHeader() + buildSidebar() + buildBottomNav());
+    setupSidebar();
+    setupUserMenu();
+    updateUserDisplay();
+    updateNotifBadge();       // paint cached value immediately (0 on first ever load)
+    fetchAndCacheAlerts();    // fetch in background if cache is empty
   }
 
   function setupSidebar() {
@@ -149,7 +235,7 @@
     if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
     if (overlay) overlay.addEventListener('click', closeSidebar);
 
-    ['logoutBtn', 'sidebarLogout'].forEach(id => {
+    ['logoutBtn', 'sidebarLogout'].forEach(function (id) {
       const el = document.getElementById(id);
       if (el) el.addEventListener('click', function (e) {
         e.preventDefault();
@@ -171,7 +257,7 @@
     try {
       const user = JSON.parse(localStorage.getItem('userData') || '{}');
       const name = user.username || user.email || 'Admin';
-      ['headerUserName', 'sidebarUserName'].forEach(id => {
+      ['headerUserName', 'sidebarUserName'].forEach(function (id) {
         const el = document.getElementById(id);
         if (el) el.textContent = name;
       });
@@ -183,4 +269,5 @@
   } else {
     inject();
   }
+
 })();
