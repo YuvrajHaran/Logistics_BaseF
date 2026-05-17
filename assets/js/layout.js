@@ -6,6 +6,14 @@
 
 (function () {
   'use strict';
+    function formatExpiry(dateStr) {
+    if (!dateStr) return 'Unknown';
+    try {
+      return new Date(dateStr).toLocaleDateString('en-IN');
+    } catch (e) {
+      return dateStr;
+    }
+  }
 
   const NAV_ITEMS = [
     { href: 'dashboard.html', icon: '📊', text: 'Dashboard', id: 'dashboard' },
